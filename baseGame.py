@@ -26,10 +26,8 @@ class Bananagrams:
     def draw(self):
         self.scale = max(5, self.scale)
         self.size = int(self.screen / self.scale)
-        self.window.fill("white")
+        self.window.fill("yellow")
         scale = int(self.scale + 1)
-        x0 = self.center[0]
-        y0 = self.center[1]
         for i in range(-scale, scale):
             for j in range(-scale, scale):
                 self.placeTile((i, j))
@@ -41,8 +39,8 @@ class Bananagrams:
         y = origin - self.size * (pos[1] + 1 / 2)
         color = "black"
         if pos == (0, 0):
-            color = "yellow"
-        pg.draw.rect(self.window, color, pg.Rect(x, y, self.size, self.size), 1)
+            color = "red"
+        pg.draw.rect(self.window, color, pg.Rect(x, y, self.size, self.size), 2)
         tile = (self.center[0] + pos[0], self.center[1] + pos[1])
         if tile in self.board:
             letter = self.board[tile]
@@ -82,7 +80,43 @@ class Bananagrams:
 
     # check board for valid words
     def check(self):
-        return
+        wordList = []
+        firstTiles = self.getFirstTiles()
+        for tile in firstTiles:
+            x, y = firstTiles[tile]
+            if x == 1:
+                word = self.board[tile]
+                nextTile = (tile[0] - 1, tile[1])
+                while nextTile in self.board:
+                    word += self.board[nextTile]
+                    nextTile = (nextTile[0] - 1, nextTile[1])
+                if not words.check(word.lower()):
+                    wordList.append(word)
+            if y == 1:
+                word = self.board[tile]
+                nextTile = (tile[0], tile[1] - 1)
+                while nextTile in self.board:
+                    word += self.board[nextTile]
+                    nextTile = (nextTile[0], nextTile[1] - 1)
+                if not words.check(word.lower()):
+                    wordList.append(word)
+        return wordList
+
+    # get a dictionary of the tiles that are the first letter of each word and the direction
+    def getFirstTiles(self):
+        firstTiles = {}
+        for tile in self.board:
+            x, y = tile
+            isH = 0  # is the start of a word that goes horizontally
+            isV = 0  # is the start of a word that goes vertically
+            if not (x + 1, y) in self.board and (x - 1, y) in self.board:
+                isH = 1
+            if not (x, y + 1) in self.board and (x, y - 1) in self.board:
+                isV = 1
+            directions = (isH, isV)
+            if directions != (0, 0):
+                firstTiles[tile] = directions
+        return firstTiles
 
     # do every frame
     def onTick(self):
@@ -114,7 +148,9 @@ class Bananagrams:
                     elif k == pg.K_BACKSPACE:
                         self.delete(self.center)
                     elif k == pg.K_RETURN:
-                        self.check()
+                        invalid = self.check()
+                        if invalid:
+                            print("Invalid Words:", invalid)
                 elif event.type == pg.MOUSEWHEEL:
                     self.changeView(scale=1 * -np.sign(event.y))
 
