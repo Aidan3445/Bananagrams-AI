@@ -1,94 +1,104 @@
 import sys
 import random
+from threading import Thread
+
 import pygame as pg
 import numpy as np
+
 import words.twl as words
-
-# pool of letters for this game
-tilePool = {}
-
-# an empty set of all letters
-emptySet = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0, "F": 0, "G": 0, "H": 0, "I": 0, "J": 0, "K": 0,
-            "L": 0, "M": 0, "N": 0, "O": 0, "P": 0, "Q": 0, "R": 0, "S": 0, "T": 0, "U": 0, "V": 0,
-            "W": 0, "X": 0, "Y": 0, "Z": 0}
-
-
-# get the number of tiles in a dictionary params: dictionary to count
-def countTiles(tiles):
-    cnt = 0
-    for letter in tiles:
-        cnt += tiles[letter]  # add value
-    return cnt
-
-
-# pull a tile from the set params: dictionary to pull from, index to pull at
-def pullTile(tiles, index):
-    cnt = 0
-    for letter in tiles:
-        cnt += tiles[letter]
-        if cnt > index:  # once count breaks index barrier letter has been found
-            tiles[letter] -= 1  # decrease letter count
-            return letter
-
-
-# create a random starting hand params: size of hand, number of players
-def startingHand(size=20, players=1):
-    # official Bananagrams tile set
-    tilePool = {"A": 13, "B": 3, "C": 3, "D": 6, "E": 18, "F": 3, "G": 4, "H": 3, "I": 12, "J": 2, "K": 2,
-                "L": 5, "M": 3, "N": 8, "O": 11, "P": 3, "Q": 2, "R": 9, "S": 6, "T": 9, "U": 6, "V": 3,
-                "W": 3, "X": 2, "Y": 3, "Z": 2}
-    hands = []
-    player = 0
-    for i in range(players):  # initialize hands to empty
-        hands.append(emptySet.copy())
-    for i in range(size * players):  # make random drawings in order
-        index = random.randint(0, countTiles(tilePool) - 1)
-        pick = pullTile(tilePool, index)
-        hands[player][pick] += 1  # add to hand
-        player = (player + 1) % players  # increment player
-    return hands
-
-
-# generating hand for 1 player
-allHands = startingHand()
 
 
 class Bananagrams:
-    # constructor for a game of bananagrams params: list of players, player to display
-    def __init__(self, listOfPlayers, disPlayer=0, screen=600, seed=None):
+    # constructor for a game of bananagrams params: list of players, OPT:random seed
+    def __init__(self, listOfPlayers, seed=None):
         self.players = listOfPlayers  # list of players in the game
         self.tilePool = {}  # pool of tiles left
+        self.tileCount = 0  # number of tiles in tilePool
         self.timer = 0  # timer for game to compare players
-        self.disPlayer = disPlayer  # player to display in the pygame window
+        # TODO: move drawing window to this class rather than player class
         if seed is not None:
             random.seed(seed)  # random seed for consistent play
 
+    # make a new game
     def newGame(self):
+        # initial tile pool
         self.tilePool = {"A": 13, "B": 3, "C": 3, "D": 6, "E": 18, "F": 3, "G": 4, "H": 3, "I": 12, "J": 2, "K": 2,
                          "L": 5, "M": 3, "N": 8, "O": 11, "P": 3, "Q": 2, "R": 9, "S": 6, "T": 9, "U": 6, "V": 3,
                          "W": 3, "X": 2, "Y": 3, "Z": 2}
-        self.play()
+        self.tileCount = self.countTiles()
+        self.resetPlayers()
 
-    # pygame run loop
+    # play current game
     def play(self):
-        for pNum, p in enumerate(self.players):
-            p.makeMove()
-            if pNum == self.disPlayer:
-                p.draw()
+        self.newGame()
+        # for p in self.players:
+        #     p.board = {}
+        #     Thread(target=p.play).start()
+        p = self.players[0]
+        p.play()
+
+    # draw one tile for all players
+    def peel(self):
+        if self.tileCount == 0:
+            return True
+        for p in self.players:
+            pick = self.pullTile()
+            p.hand[pick] += 1
+        return False
+
+    # get the number of tiles in a dictionary params: dictionary to count
+    def countTiles(self):
+        cnt = 0
+        for letter in self.tilePool:
+            cnt += self.tilePool[letter]  # add value
+        return cnt
+
+    # pull a tile from the set params: dictionary to pull from, index to pull at
+    def pullTile(self):
+        cnt = 0
+        index = random.randint(0, self.tileCount - 1)
+        for letter in self.tilePool:
+            cnt += self.tilePool[letter]
+            if cnt > index:  # once count breaks index barrier letter has been found
+                self.tilePool[letter] -= 1  # decrease letter count
+                self.tileCount -= 1
+                return letter
+
+    # create a random starting hand params: size of hand, number of players
+    def resetPlayers(self, size=20):
+        # official Bananagrams tile set
+        self.tilePool = {"A": 13, "B": 3, "C": 3, "D": 6, "E": 18, "F": 3, "G": 4, "H": 3, "I": 12, "J": 2, "K": 2,
+                         "L": 5, "M": 3, "N": 8, "O": 11, "P": 3, "Q": 2, "R": 9, "S": 6, "T": 9, "U": 6, "V": 3,
+                         "W": 3, "X": 2, "Y": 3, "Z": 2}
+        # an empty set of all letters
+        emptySet = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0, "F": 0, "G": 0, "H": 0, "I": 0, "J": 0, "K": 0,
+                    "L": 0, "M": 0, "N": 0, "O": 0, "P": 0, "Q": 0, "R": 0, "S": 0, "T": 0, "U": 0, "V": 0,
+                    "W": 0, "X": 0, "Y": 0, "Z": 0}
+        for p in self.players:  # initialize hands and boards to empty and set player game to this game
+            p.hand = emptySet.copy()
+            p.board = {}
+            p.game = self
+        for i in range(size):  # make random drawings in order
+            self.peel()
 
 
 class Player:
-    # constructor for a single player's Bananagrams board params: number of players, screen size
-    def __init__(self, screen=600, player=0):
+    # constructor for a single player's Bananagrams board params: bananagrams game, OPT:screen size
+    def __init__(self, screen=600):
         self.screen = screen  # screen size (square)
         self.scale = 8  # number of tiles across screen
         self.size = int(screen / self.scale)  # size of each tile
         self.board = {}  # dictionary representation of the board
-        self.hand = allHands[player]  # dictionary representation of the player's hand
+        self.hand = {}  # dictionary representation of the player's hand
         self.center = (0, 0)  # coordinate of tile in center of screen (initial: origin)
         self.dir = (-1, 0)  # direction vector (initial: right)
+        self.game = None
 
         self.window = pg.display.set_mode((self.screen, self.screen + 50))  # board window
+
+    # what should return when printed
+    def __str__(self):
+        return "USER"
 
     # draw board view
     def drawBoard(self):
@@ -131,7 +141,7 @@ class Player:
                 l2 += letter + ": " + str(self.hand[letter]) + "  "
             count += 1
         pg.draw.rect(self.window, "white", pg.Rect(0, self.screen, self.screen, 50))
-        font = pg.font.SysFont(None, 25)
+        font = pg.font.SysFont(None, 30)
         text = font.render(l1, True, 'black')
         align = text.get_rect(center=(self.screen / 2, self.screen + 12.5))
         self.window.blit(text, align)  # draw line 1
@@ -229,10 +239,10 @@ class Player:
 
     # pygame run loop
     def play(self):
-        pg.init()
+        pg.fastevent.init()
         pg.font.init()
-        while True:  # play loop
-            for event in pg.event.get():  # input event handler
+        while self.game is not None:  # play loop
+            for event in pg.fastevent.get():  # input event handler
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
@@ -244,19 +254,21 @@ class Player:
                     elif k == pg.K_DOWN:
                         self.changeView(y=-1)
                         self.dir = (0, -1)
-                    elif k == pg.K_UP:
-                        self.changeView(y=1)
                     elif k == pg.K_LEFT:
                         self.changeView(x=1)
+                        self.dir = (-1, 0)
+                    elif k == pg.K_UP:
+                        self.changeView(y=1)
+                        self.dir = (0, -1)
                     elif 97 <= k <= 122:  # range of letter keys only
                         self.playLetter(k)
                     elif k == pg.K_BACKSPACE:
                         self.delete(self.center)
+                    elif k == pg.K_SPACE:
+                        if self.game.peel():
+                            print(self, "wins")
                     elif k == pg.K_RETURN:
                         self.check()
-                    elif k == pg.K_SPACE:
-                        self.hand = startingHand()[0]
-                        self.board = {}
                 elif event.type == pg.MOUSEWHEEL:
                     self.changeView(scale=1 * -np.sign(event.y))
                 pg.display.update()
@@ -266,5 +278,6 @@ class Player:
             pg.time.Clock().tick(60)
 
 
-game = Player()
+user = Player()
+game = Bananagrams([user])
 game.play()

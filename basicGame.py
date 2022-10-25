@@ -55,7 +55,7 @@ allHands = startingHand()
 
 class SinglePlayer:
     # constructor for a single player's Bananagrams board params: number of players, screen size
-    def __init__(self, screen=600, player=0):
+    def __init__(self, player=0, screen=600):
         self.screen = screen  # screen size (square)
         self.scale = 8  # number of tiles across screen
         self.size = int(screen / self.scale)  # size of each tile
