@@ -54,6 +54,30 @@ allHands = startingHand()
 
 
 class Bananagrams:
+    # constructor for a game of bananagrams params: list of players, player to display
+    def __init__(self, listOfPlayers, disPlayer=0, screen=600, seed=None):
+        self.players = listOfPlayers  # list of players in the game
+        self.tilePool = {}  # pool of tiles left
+        self.timer = 0  # timer for game to compare players
+        self.disPlayer = disPlayer  # player to display in the pygame window
+        if seed is not None:
+            random.seed(seed)  # random seed for consistent play
+
+    def newGame(self):
+        self.tilePool = {"A": 13, "B": 3, "C": 3, "D": 6, "E": 18, "F": 3, "G": 4, "H": 3, "I": 12, "J": 2, "K": 2,
+                         "L": 5, "M": 3, "N": 8, "O": 11, "P": 3, "Q": 2, "R": 9, "S": 6, "T": 9, "U": 6, "V": 3,
+                         "W": 3, "X": 2, "Y": 3, "Z": 2}
+        self.play()
+
+    # pygame run loop
+    def play(self):
+        for pNum, p in enumerate(self.players):
+            p.makeMove()
+            if pNum == self.disPlayer:
+                p.draw()
+
+
+class Player:
     # constructor for a single player's Bananagrams board params: number of players, screen size
     def __init__(self, screen=600, player=0):
         self.screen = screen  # screen size (square)
@@ -232,6 +256,7 @@ class Bananagrams:
                         self.check()
                     elif k == pg.K_SPACE:
                         self.hand = startingHand()[0]
+                        self.board = {}
                 elif event.type == pg.MOUSEWHEEL:
                     self.changeView(scale=1 * -np.sign(event.y))
                 pg.display.update()
@@ -241,5 +266,5 @@ class Bananagrams:
             pg.time.Clock().tick(60)
 
 
-game = Bananagrams()
+game = Player()
 game.play()
