@@ -1,7 +1,7 @@
 import random
-import sys
 import pygame as pg
 
+from Util import BananagramsUtil as util
 from HumanPlayer import Human
 from PeelPlayer import Peel
 from DoNothingPlayer import DoNothing
@@ -9,14 +9,16 @@ from DoNothingPlayer import DoNothing
 
 class Bananagrams:
     # constructor for a game of bananagrams params: list of players, OPT:random seed
-    def __init__(self, listOfPlayers, seed=None):
+    def __init__(self, listOfPlayers, seed=None, setWidth=1000, setHeight=900):
         if len(listOfPlayers) < 1 or len(listOfPlayers) > 4:
             raise Exception("1 - 4 players")
         self.players = listOfPlayers  # list of players in the game
         self.tilePool = {}  # pool of tiles left
-        self.tileCount = 0  # number of tiles in tilePool
         self.timer = 0  # timer for game to compare players
-        self.window = pg.display.set_mode((1000, 900))  # board window
+        self.width = setWidth
+        self.height = setHeight
+        self.gameScreen = pg.Surface((1000, 900))
+        self.window = pg.display.set_mode((setWidth, setHeight))  # board window
         if seed is not None:
             random.seed(seed)  # random seed for consistent play
 
@@ -26,7 +28,6 @@ class Bananagrams:
         self.tilePool = {"A": 13, "B": 3, "C": 3, "D": 6, "E": 18, "F": 3, "G": 4, "H": 3, "I": 12, "J": 2, "K": 2,
                          "L": 5, "M": 3, "N": 8, "O": 11, "P": 3, "Q": 2, "R": 9, "S": 6, "T": 9, "U": 6, "V": 3,
                          "W": 3, "X": 2, "Y": 3, "Z": 2}
-        self.tileCount = self.countTiles()
         self.resetPlayers()
 
     # play current game
@@ -39,35 +40,18 @@ class Bananagrams:
                 x = 500 * (i % 2)
                 y = 450 * int(i / 2)
                 p.onTick((x, y))
+                self.window.blit(pg.transform.scale(self.gameScreen, (self.width, self.height)), (0, 0))
                 pg.display.update()
             self.timer += 1
 
     # draw one tile for all players
     def peel(self):
-        if self.tileCount == 0:
+        if util.countTiles(self.tilePool) == 0:
             return True
         for p in self.players:
-            pick = self.pullTile()
+            pick = util.pullTile(self.tilePool)
             p.hand[pick] += 1
         return False
-
-    # get the number of tiles in a dictionary params: dictionary to count
-    def countTiles(self):
-        cnt = 0
-        for letter in self.tilePool:
-            cnt += self.tilePool[letter]  # add value
-        return cnt
-
-    # pull a tile from the set params: dictionary to pull from, index to pull at
-    def pullTile(self):
-        cnt = 0
-        index = random.randint(0, self.tileCount - 1)
-        for letter in self.tilePool:
-            cnt += self.tilePool[letter]
-            if cnt > index:  # once count breaks index barrier letter has been found
-                self.tilePool[letter] -= 1  # decrease letter count
-                self.tileCount -= 1
-                return letter
 
     # create a random starting hand params: size of hand, number of players
     def resetPlayers(self, size=20):
@@ -86,14 +70,6 @@ class Bananagrams:
         for i in range(size):  # make random drawings in order
             self.peel()
 
-    # quit game
-    @staticmethod
-    def quit():
-        pg.quit()
-        sys.exit()
 
-
-game = Bananagrams([Human(), DoNothing(), Peel()])
+game = Bananagrams([Human(), DoNothing(), DoNothing()], setWidth=1000, setHeight=900)
 game.play()
-
-

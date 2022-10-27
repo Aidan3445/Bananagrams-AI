@@ -1,4 +1,4 @@
-import sys
+from Util import BananagramsUtil
 from Player import Player
 import pygame as pg
 import numpy as np
@@ -9,7 +9,7 @@ class Human(Player):
     def play(self):
         for event in pg.fastevent.get():  # input event handler
             if event.type == pg.QUIT:
-                self.game.quit()
+                BananagramsUtil.quit()
             if event.type == pg.KEYDOWN:
                 k = event.key
                 if k == pg.K_RIGHT:

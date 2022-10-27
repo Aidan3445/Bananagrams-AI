@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import pygame as pg
 import words.twl as words
+from Util import BananagramsUtil as util
 
 
 class Player(ABC):
@@ -15,7 +16,7 @@ class Player(ABC):
         self.center = (0, 0)  # coordinate of tile in center of screen (initial: origin)
         self.dir = (-1, 0)  # direction vector (initial: right)
         self.game = None
-        self.window = pg.Surface((self.screenW, self.screenH))  # board window
+        self.boardScreen = pg.Surface((self.screenW, self.screenH))  # board image
 
     # what should return when printed
     def __str__(self):
@@ -23,7 +24,7 @@ class Player(ABC):
 
     # draw board view
     def drawBoard(self):
-        self.window.fill("yellow")  # yellow background
+        self.boardScreen.fill("yellow")  # yellow background
         scale = int(self.scale + 1)
         for i in range(-scale, scale):  # show tiles in scale x scale grid
             for j in range(-scale, scale):
@@ -37,14 +38,14 @@ class Player(ABC):
         color = "black"
         if pos == (0, 0):  # box is red for center
             color = "red"
-        pg.draw.rect(self.window, color, pg.Rect(x, y, self.size, self.size), 2)
+        pg.draw.rect(self.boardScreen, color, pg.Rect(x, y, self.size, self.size), 2)
         tile = (self.center[0] + pos[0], self.center[1] + pos[1])
         if tile in self.board:  # check for tile value to draw in box
             letter = self.board[tile]
             font = pg.font.SysFont(None, self.size)
             text = font.render(letter, True, 'black')
             align = text.get_rect(center=(x + self.size / 2, y + self.size / 2))
-            self.window.blit(text, align)
+            self.boardScreen.blit(text, align)
 
     # show tiles in player's hand
     def drawHand(self):
@@ -61,14 +62,14 @@ class Player(ABC):
             else:
                 l2 += letter + ":" + str(self.hand[letter]) + "  "
             count += 1
-        pg.draw.rect(self.window, "white", pg.Rect(0, self.screenH - 50, self.screenW, 50))
+        pg.draw.rect(self.boardScreen, "white", pg.Rect(0, self.screenH - 50, self.screenW, 50))
         font = pg.font.SysFont(None, 24)
         text = font.render(l1, True, 'black')
         align = text.get_rect(center=(self.screenW / 2, self.screenH - 37.5))
-        self.window.blit(text, align)  # draw line 1
+        self.boardScreen.blit(text, align)  # draw line 1
         text = font.render(l2, True, 'black')
         align = text.get_rect(center=(self.screenW / 2, self.screenH - 12.5))
-        self.window.blit(text, align)  # draw line 2
+        self.boardScreen.blit(text, align)  # draw line 2
 
     # change the view params: +/- change in scale, +/- x-shift, +/- y-shift
     def changeView(self, x=0, y=0, scale=0.):
@@ -76,7 +77,8 @@ class Player(ABC):
             self.center = self.center = (self.center[0] + x, self.center[1] + y)
         else:
             self.scale += scale
-            self.scale = max(5, self.scale)  # min visible is 5 x 5
+            self.scale = max(5, self.scale)  # min visible is 5 x 4
+            self.scale = min(25, self.scale)  # max visible is 25 x 20
             self.size = int(self.screenW / self.scale)
 
     # play a letter from your hand params: keycode of character to play
@@ -139,6 +141,9 @@ class Player(ABC):
             print("Invalid Words:", invalid)
         else:
             print("All", len(valid), "words are valid!")
+            if util.countTiles(self.hand) == 0:
+                print("PEEL!")
+                self.game.peel()
 
     # get a dictionary of the tiles that are the first letter of each word and the direction
     def getFirstTiles(self):
@@ -161,13 +166,15 @@ class Player(ABC):
         self.play()
         self.drawBoard()
         self.drawHand()
-        pg.draw.rect(self.window, "grey", self.window.get_rect(), 5)  # frame
-        align = self.window.get_rect(topleft=pos)
-        self.game.window.blit(self.window, align)
+        pg.draw.rect(self.boardScreen, "grey", self.boardScreen.get_rect(), 5)  # frame
+        align = self.boardScreen.get_rect(topleft=pos)
+        self.game.gameScreen.blit(self.boardScreen, align)
         pg.display.update()
         pg.time.Clock().tick(60)
 
-    # player game logic params: window events
+    # player game logic
     @abstractmethod
     def play(self):
         pass
+
+
