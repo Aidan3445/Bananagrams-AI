@@ -29,8 +29,7 @@ class Human(Player):
                 elif k == pg.K_BACKSPACE:
                     self.delete(self.center)
                 elif k == pg.K_SPACE:
-                    if self.game.peel():
-                        print(self, "wins")
+                    self.dump()
                 elif k == pg.K_RETURN:
                     self.check()
             elif event.type == pg.MOUSEWHEEL:

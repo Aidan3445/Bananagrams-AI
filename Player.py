@@ -109,6 +109,11 @@ class Player(ABC):
             self.board.pop(tile)
             self.hand[letter] += 1
 
+    # dump board and get new tiles
+    def dump(self):
+        # TODO: add dump per bananagrams rules
+        pass
+
     # check board for valid words
     def check(self):
         # TODO: add check for islands
