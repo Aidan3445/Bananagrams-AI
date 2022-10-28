@@ -126,13 +126,14 @@ def check(word):
     '''
     Returns True if `word` exists in the TWL06 dictionary.
     Returns False otherwise.
-    
+
     >>> twl.check('word')
     True
     >>> twl.check('asdf')
     False
     '''
     return word in _DAWG
+
 
 def iterator():
     '''
@@ -149,11 +150,13 @@ def iterator():
     '''
     return iter(_DAWG)
 
+
 def children(prefix):
     '''
     Returns a list of letters that may appear after `prefix`.
     '''
     return _DAWG.children(prefix)
+
 
 def anagram(letters):
     '''
@@ -164,14 +167,17 @@ def anagram(letters):
     for word in _DAWG.anagram(letters):
         yield word
 
+
 END = '$'
 WILD = '?'
+
 
 class _Dawg(object):
     def __init__(self, data):
         data = base64.b64decode(data)
         data = zlib.decompress(data)
         self.data = data
+
     def _get_record(self, index):
         a = index * 4
         b = index * 4 + 4
@@ -180,6 +186,7 @@ class _Dawg(object):
         letter = chr((x >> 24) & 0x7f)
         link = int(x & 0xffffff)
         return (more, letter, link)
+
     def _get_child(self, index, letter):
         while True:
             more, other, link = self._get_record(index)
@@ -188,6 +195,7 @@ class _Dawg(object):
             if not more:
                 return None
             index += 1
+
     def _get_children(self, index):
         result = []
         while True:
@@ -197,6 +205,7 @@ class _Dawg(object):
                 break
             index += 1
         return result
+
     def _anagram(self, bag, index=0, letters=None):
         letters = letters or []
         while True:
@@ -220,6 +229,7 @@ class _Dawg(object):
             if not more:
                 break
             index += 1
+
     def __contains__(self, word):
         index = 0
         for letter in itertools.chain(word, END):
@@ -227,6 +237,7 @@ class _Dawg(object):
             if index is None:
                 return False
         return True
+
     def __iter__(self, index=0, letters=None):
         letters = letters or []
         while True:
@@ -241,6 +252,7 @@ class _Dawg(object):
             if not more:
                 break
             index += 1
+
     def children(self, prefix):
         index = 0
         for letter in prefix:
@@ -248,12 +260,14 @@ class _Dawg(object):
             if index in (0, None):
                 return []
         return self._get_children(index)
+
     def anagram(self, letters):
         bag = collections.defaultdict(int)
         for letter in letters:
             bag[letter] += 1
         for word in self._anagram(bag):
             yield word
+
 
 _DAWG = _Dawg(
     "eJxknXd8lMXTwOfSLr33nmDvvStWsCB2UUDwkhxJII1LAgkqiB3svYvYBRvYBUUFG9gbYs"

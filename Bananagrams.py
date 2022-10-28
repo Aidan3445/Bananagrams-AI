@@ -3,22 +3,20 @@ import pygame as pg
 
 from Util import BananagramsUtil as util
 from HumanPlayer import Human
-from PeelPlayer import Peel
 from DoNothingPlayer import DoNothing
 
 
 class Bananagrams:
-    # constructor for a game of bananagrams params: list of players, OPT:random seed
-    def __init__(self, listOfPlayers, seed=None, setWidth=1000, setHeight=900):
+    # constructor for a game of bananagrams params: list of players, OPT random seed
+    def __init__(self, listOfPlayers, seed=None, setSize=800):
         if len(listOfPlayers) < 1 or len(listOfPlayers) > 4:
             raise Exception("1 - 4 players")
         self.players = listOfPlayers  # list of players in the game
         self.tilePool = {}  # pool of tiles left
         self.timer = 0  # timer for game to compare players
-        self.width = setWidth
-        self.height = setHeight
-        self.gameScreen = pg.Surface((1000, 900))
-        self.window = pg.display.set_mode((setWidth, setHeight))  # board window
+        self.size = setSize
+        self.gameScreen = pg.Surface((1000, 1000))
+        self.window = pg.display.set_mode((setSize, setSize))  # board window
         if seed is not None:
             random.seed(seed)  # random seed for consistent play
 
@@ -33,21 +31,21 @@ class Bananagrams:
     # play current game
     def play(self):
         self.newGame()
-        pg.fastevent.init()
+        pg.fastevent.init()  # pygame setup
         pg.font.init()
-        while True:
+        while True:  # play loop
             for i, p in enumerate(self.players):
-                x = 500 * (i % 2)
-                y = 450 * int(i / 2)
-                p.onTick((x, y))
-                self.window.blit(pg.transform.scale(self.gameScreen, (self.width, self.height)), (0, 0))
+                x = 500 * (i % 2)  # place board in 2x2 grid of boards in game
+                y = 500 * int(i / 2)
+                p.onTick((x, y))  # update board
+                self.window.blit(pg.transform.scale(self.gameScreen, (self.size, self.size)), (0, 0))
                 pg.display.update()
             self.timer += 1
 
     # draw one tile for all players
     def peel(self):
         if util.countTiles(self.tilePool) == 0:
-            return True
+            return True  # game over
         for p in self.players:
             pick = util.pullTile(self.tilePool)
             p.hand[pick] += 1
@@ -71,5 +69,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([Human(), DoNothing(), DoNothing()], setWidth=1000, setHeight=900)
+game = Bananagrams([Human()])
 game.play()
