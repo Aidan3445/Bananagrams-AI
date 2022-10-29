@@ -50,6 +50,7 @@ class Human(Player):
                         letter = self.delete()
                         if letter is not None:
                             self.dump(letter)
+                            print("Dumped", letter)
                 elif k == pg.K_RETURN:
                     self.check()
             elif event.type == pg.MOUSEWHEEL:

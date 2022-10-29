@@ -30,12 +30,18 @@ class BananagramsUtil:
     @staticmethod
     # pull a tile from the set params: dictionary to pull from
     def pullTile(tileSet):
+        letter = BananagramsUtil.getRandomTile(tileSet)
+        tileSet[letter] -= 1
+        return letter
+
+    @staticmethod
+    # get random tile from tile set params: dictionary to pull from
+    def getRandomTile(tileSet):
         cnt = 0
         index = random.randint(0, BananagramsUtil.countTiles(tileSet) - 1)
         for letter in tileSet:
             cnt += tileSet[letter]
             if cnt > index:  # once count breaks index barrier letter has been found
-                tileSet[letter] -= 1  # decrease letter count
                 return letter
 
     @staticmethod
@@ -123,22 +129,22 @@ class BananagramsUtil:
             after = wordLength - before - 1  # letters after tile letter
             # across checks
             if before < left and after < right:
-                test = board.copy()
+                test = board.copy()  # make play on copy of current board
                 nextTile = (tile[0] + before, tile[1])
                 for letter in word:
                     test[nextTile] = letter
                     nextTile = (nextTile[0] - 1, nextTile[1])
-                _, invalid = BananagramsUtil.check(test)
+                _, invalid = BananagramsUtil.check(test)  # check for play validity
                 if not invalid:
                     playableWords.append((word, before, (-1, 0)))
             # down checks
             if before < top and after < bottom:
-                test = board.copy()
+                test = board.copy()  # make play on copy of current board
                 nextTile = (tile[0], tile[1] + before)
                 for letter in word:
                     test[nextTile] = letter
                     nextTile = (nextTile[0], nextTile[1] - 1)
-                _, invalid = BananagramsUtil.check(test)
+                _, invalid = BananagramsUtil.check(test)  # check for play validity
                 if not invalid:
                     playableWords.append((word, before, (0, -1)))
             # TODO: add "bridge" plays that span 2 or more separated tiles

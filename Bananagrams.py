@@ -4,7 +4,7 @@ import pygame as pg
 from Util import BananagramsUtil as util
 from HumanPlayer import Human
 from LongestWordPlayer import LongestWord
-from DoNothingPlayer import DoNothing
+from ScabbleOneLookPlayer import ScrabbleOneLook
 
 
 class Bananagrams:
@@ -87,5 +87,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([LongestWord(), LongestWord(), LongestWord(), LongestWord()])
+game = Bananagrams([ScrabbleOneLook(), LongestWord(), ScrabbleOneLook(), LongestWord()])
 game.newGame()

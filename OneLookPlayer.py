@@ -19,8 +19,15 @@ class OneLook(AIPlayer, ABC):
         for tile in allPlays:
             for play in allPlays[tile]:
                 h = self.heuristic(play)
-                if h > bestH:
+                if h > bestH:  # store play info if better score
                     bestH = h
                     bestPlay = play
                     bestTile = tile
         return bestTile, bestPlay
+
+    # behaviour when no moves are found
+    def noMoves(self):
+        if util.countTiles(self.hand) == 0:
+            self.game.peel(self)
+        else:
+            self.randomDump()

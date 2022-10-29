@@ -21,6 +21,11 @@ class AIPlayer(Player, ABC):
     def noMoves(self):
         pass
 
+    # dump a random letter
+    def randomDump(self):
+        letter = util.getRandomTile(self.hand)
+        self.dump(letter)
+
     # evaluate and make next move
     def play(self):
         for event in pg.event.get():  # input event handler
@@ -35,7 +40,7 @@ class AIPlayer(Player, ABC):
         self.dir = direction  # set direction
         for letter in word:
             self.playLetter(letter)  # play word
-        left, right, top, bottom = util.getBoardArea(self.board)
+        left, right, top, bottom = util.getBoardArea(self.board)  # set view
         self.center = (int((left + right) / 2), int((top + bottom) / 2))
         self.scale = 1.5 * max(left - right, top - bottom)
         self.scaleView()
