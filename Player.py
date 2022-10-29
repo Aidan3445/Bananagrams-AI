@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+import random
+
 import pygame as pg
-import words.twl as words
 from Util import BananagramsUtil as util
 
 
@@ -16,6 +17,13 @@ class Player(ABC):
         self.dir = (-1, 0)  # direction vector (initial: right)
         self.game = None
         self.boardScreen = pg.Surface((self.screen, self.screen))  # board image
+        self.playerID = random.random()
+
+    # override equals
+    def __eq__(self, other):
+        if type(other) == type(self):
+            return other.playerID == self.playerID
+        return False
 
     @abstractmethod
     # what should return when printed
@@ -76,7 +84,7 @@ class Player(ABC):
         self.center = (self.center[0] + x, self.center[1] + y)
 
     # scale the view to show more/less of the board params: +/- change in scale
-    def scaleView(self, scale):
+    def scaleView(self, scale=0):
         self.scale += scale
         self.scale = max(5, self.scale)  # min visible is 5 x 4
         self.scale = min(25, self.scale)  # max visible is 25 x 20
@@ -120,18 +128,6 @@ class Player(ABC):
                     self.hand[util.pullTile(self.game.tilePool)] += 1  # pick random tile
             self.game.tilePool[letter] += 1  # add tile back to pool
 
-    # check board for valid words
-    def check(self):
-        valid, invalid = util.check(self.board)
-        if invalid:
-            print("Invalid Words:", invalid)  # print invalid words
-        else:
-            print("All", len(valid), "words are valid!")  # print number of valid words
-            if util.countTiles(self.hand) == 0:
-                print("PEEL!")
-                if self.game.peel():  # peel and test for game over
-                    print(self, "WINS!")
-
     # do every frame params: pos to place in the window
     def onTick(self, pos):
         self.play()  # make move
@@ -147,5 +143,3 @@ class Player(ABC):
     # make next move
     def play(self):
         pass
-
-

@@ -12,6 +12,14 @@ class BananagramsUtil:
         sys.exit()
 
     @staticmethod
+    # convert board/hand tiles to single string
+    def handToString(hand):
+        handString = ""
+        for letter in hand:
+            handString += letter * hand[letter]  # add letters to string
+        return handString
+
+    @staticmethod
     # get the number of tiles in a dictionary params: dictionary to count
     def countTiles(tileSet):
         cnt = 0
@@ -79,49 +87,97 @@ class BananagramsUtil:
         return firstTiles
 
     @staticmethod
-    # get the playable spots for a board params: board to search
-    def getPlayableSpots(board):
-        across = {}
-        down = {}
-        firstTiles = BananagramsUtil.getFirstTiles(board)
-        for tile in firstTiles:
-            x, y = firstTiles[tile]
-            if x == 1:  # is across
-                word = ""
-                nextTile = tile
-                while nextTile in board:  # build word
-                    nextX, nextY = nextTile
-                    if (nextX, nextY + 1) not in board and (nextX, nextY - 1) not in board:
-                        down[(nextTile, nextTile)] = board[nextTile]  # is it playable vertically
-                    word += board[nextTile]
-                    nextTile = (nextTile[0] - 1, nextTile[1])
-                last = (tile[0] - len(word) + 1, tile[1])
-                across[(tile, last)] = word  # add word to horizontal plays
-            if y == 1:  # is down
-                word = ""
-                nextTile = tile
-                while nextTile in board:  # build word
-                    nextX, nextY = nextTile
-                    if (nextX + 1, nextY) not in board and (nextX - 1, nextY) not in board:
-                        across[(nextTile, nextTile)] = board[nextTile]  # is it playable horizontally
-                    word += board[nextTile]
-                    nextTile = (nextTile[0], nextTile[1] - 1)
-                last = (tile[0], tile[1] - len(word) + 1)
-                down[(tile, last)] = word  # add word to horizontal plays
-        return across, down
+    # get the plays available params: board to play on, hand to play from
+    def getAllPlays(board, hand):
+        handString = BananagramsUtil.handToString(hand)
+        allPlays = {}
+        for tile in board:
+            allPlays[tile] = BananagramsUtil.getTilePlays(handString, tile, board)
+        if not allPlays:
+            allPlays[(0, 0)] = BananagramsUtil.getTilePlays(handString)
+        return allPlays
 
     @staticmethod
-    # get the plays available
-    def getWordPlays(board):
-        # TODO: add "bridge" plays that span 2 or more separated tiles
-        across, down = BananagramsUtil.getPlayableSpots(board)
-        pass
+    # get words to play off of letter params: letters in hand, letter to play off, boundaries for word length
+    def getTilePlays(letters, tile=None, board=None):
+        if tile is None or board is None:
+            allWords = list(words.anagram(letters))  # empty board means all anagrams are valid
+            playableWords = []
+            for word in allWords:
+                word = word.upper()
+                playableWords.append((word, 0, (-1, 0)))  # all first plays go across
+            return playableWords
+        tileLetter = board[tile]
+        restrictions = BananagramsUtil.getTileSpace(board, tile)
+        allWords = list(words.anagram(letters + tileLetter))
+        playableWords = []
+        left, right, top, bottom = restrictions
+        maxLength = max(left + right, top + bottom)
+        for word in allWords:
+            word = word.upper()
+            wordLength = len(word)
+            # remove word if too long or doesn't have tile letter
+            if wordLength > maxLength or tileLetter not in word:
+                continue
+            before = word.index(tileLetter)  # letters before tile letter
+            after = wordLength - before - 1  # letters after tile letter
+            # across checks
+            if before < left and after < right:
+                test = board.copy()
+                nextTile = (tile[0] + before, tile[1])
+                for letter in word:
+                    test[nextTile] = letter
+                    nextTile = (nextTile[0] - 1, nextTile[1])
+                _, invalid = BananagramsUtil.check(test)
+                if not invalid:
+                    playableWords.append((word, before, (-1, 0)))
+            # down checks
+            if before < top and after < bottom:
+                test = board.copy()
+                nextTile = (tile[0], tile[1] + before)
+                for letter in word:
+                    test[nextTile] = letter
+                    nextTile = (nextTile[0], nextTile[1] - 1)
+                _, invalid = BananagramsUtil.check(test)
+                if not invalid:
+                    playableWords.append((word, before, (0, -1)))
+            # TODO: add "bridge" plays that span 2 or more separated tiles
+        return playableWords
 
     @staticmethod
     # get the space above, below, left, and right of a tile params: board to search, tile to check
     def getTileSpace(board, tile):
-        left, top, right, bottom = BananagramsUtil.getBoardArea(board)
-        pass
+        left, right, top, bottom = BananagramsUtil.getBoardArea(board)
+        x, y = tile
+        posX = x
+        negX = x
+        posY = y
+        negY = y
+        while posX < left:  # positive x direction (left)
+            if (posX + 1, y) in board:
+                break
+            posX += 1
+        while negX > right:  # negative x direction (right)
+            if (negX - 1, y) in board:
+                break
+            negX -= 1
+        while posY < top:  # positive y direction (up)
+            if (x, posY + 1) in board:
+                break
+            posY += 1
+        while negY > bottom:  # negative y direction (down)
+            if (x, negY - 1) in board:
+                break
+            negY -= 1
+        if posX == left:  # reached boundary, no limit on word length in this direction
+            posX = float('inf')
+        if negX == right:
+            negX = float('-inf')
+        if posY == top:
+            posY = float('inf')
+        if negY == bottom:
+            negY = float('-inf')
+        return posX - x, x - negX, posY - y, y - negY
 
     @staticmethod
     # get the boundaries of used the board (left, top, right, bottom) params: board to check
@@ -140,6 +196,4 @@ class BananagramsUtil:
                 top = y  # beyond running top
             elif y < bottom:
                 bottom = y  # beyond running bottom
-        return left, top, right, bottom
-
-
+        return left, right, top, bottom

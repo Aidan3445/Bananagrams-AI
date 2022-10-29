@@ -132,7 +132,7 @@ def check(word):
     >>> twl.check('asdf')
     False
     '''
-    return word in _DAWG
+    return word.lower() in _DAWG
 
 
 def iterator():
@@ -164,7 +164,7 @@ def anagram(letters):
     given `letters`. `letters` may include '?' characters as
     a wildcard.
     '''
-    for word in _DAWG.anagram(letters):
+    for word in _DAWG.anagram(letters.lower()):
         yield word
 
 

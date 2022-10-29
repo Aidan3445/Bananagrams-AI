@@ -1,30 +1,43 @@
 from abc import abstractmethod, ABC
-
 from Player import Player
-import words.twl as words
+from Util import BananagramsUtil as util
+import pygame as pg
 
 
+# abstract class for all AI players
 class AIPlayer(Player, ABC):
-    # convert board tiles to single string
-    def handToString(self):
-        handString = ""
-        for letter in self.hand:
-            letter.lower() * self.hand[letter]  # add letters to string
-        return handString
-
     @abstractmethod
     # heuristic for to evaluate states
-    def heuristic(self):
+    def heuristic(self, play):
         pass
 
-    # aStar algorithm to choose move
-    def aStar(self):
-        return (0, 0), (1, 0), ""
+    @abstractmethod
+    # nextMove algorithm to choose move
+    def nextMove(self):
+        pass
+
+    @abstractmethod
+    # behaviour when no moves are found
+    def noMoves(self):
+        pass
 
     # evaluate and make next move
     def play(self):
-        self.center, self.dir, word = self.aStar()
+        for event in pg.event.get():  # input event handler
+            if event.type == pg.QUIT:
+                util.quit()
+        connect, play = self.nextMove()  # tile to connect to, play to make off that tile
+        if connect is None:
+            self.noMoves()
+            return  # no plays left
+        word, offset, direction = play
+        self.center = (connect[0] - (offset * direction[0]), connect[1] - (offset * direction[1]))  # set center
+        self.dir = direction  # set direction
         for letter in word:
-            self.playLetter(letter)
+            self.playLetter(letter)  # play word
+        left, right, top, bottom = util.getBoardArea(self.board)
+        self.center = (int((left + right) / 2), int((top + bottom) / 2))
+        self.scale = 1.5 * max(left - right, top - bottom)
+        self.scaleView()
 
 

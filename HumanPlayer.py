@@ -1,19 +1,31 @@
-from Util import BananagramsUtil
+from Util import BananagramsUtil as util
 from Player import Player
 import pygame as pg
 import numpy as np
 
 
+# human player
 class Human(Player):
     # what should return when printed
     def __str__(self):
         return "Human"
 
+    # check board for valid words
+    def check(self):
+        valid, invalid = util.check(self.board)
+        if invalid:
+            print("Invalid Words:", invalid)  # print invalid words
+        else:
+            print("All", len(valid), "words are valid!")  # print number of valid words
+            if util.countTiles(self.hand) == 0:
+                print("PEEL!")
+                self.game.peel(self)  # peel and test for game over
+
     # take user input for play
     def play(self):
-        for event in pg.fastevent.get():  # input event handler
+        for event in pg.event.get():  # input event handler
             if event.type == pg.QUIT:
-                BananagramsUtil.quit()
+                util.quit()
             if event.type == pg.KEYDOWN:
                 k = event.key
                 if k == pg.K_RIGHT:
@@ -39,8 +51,9 @@ class Human(Player):
                         if letter is not None:
                             self.dump(letter)
                 elif k == pg.K_RETURN:
-                    # print(BananagramsUtil.getWordPlays(self.board))
                     self.check()
             elif event.type == pg.MOUSEWHEEL:
                 self.scaleView(1 * -np.sign(event.y))
             pg.display.update()
+
+
