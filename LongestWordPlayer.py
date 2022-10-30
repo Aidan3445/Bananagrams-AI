@@ -1,9 +1,8 @@
 from OneLookPlayer import OneLook
-from Util import BananagramsUtil as util
 
 
 # one look player that plays the longest word available
-class LongestWord(OneLook):
+class LongestOneLook(OneLook):
     # what should return when printed
     def __str__(self):
         return "Longest Word One Look"

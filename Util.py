@@ -45,6 +45,21 @@ class BananagramsUtil:
                 return letter
 
     @staticmethod
+    # play a word from a hand onto a board params: move to make, hand to play from, board to play on
+    def makeMove(move, board, hand):
+        connect, play = move
+        word, offset, direction = play
+        boardCopy = board.copy()  # make play on copy of current board and hand
+        handCopy = hand.copy()
+        nextTile = (connect[0] - (offset * direction[0]), connect[1] - (offset * direction[1]))
+        for letter in word:
+            boardCopy[nextTile] = letter
+            handCopy[letter] -= 1
+            nextTile = (nextTile[0] - 1, nextTile[1])
+        return boardCopy, handCopy
+
+
+    @staticmethod
     # check board for valid words params: board to check
     def check(board):
         # TODO: add check for islands

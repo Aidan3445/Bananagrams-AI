@@ -6,12 +6,12 @@ from Util import BananagramsUtil as util
 # abstract class for a player that only looks one move at a time (max depth = 1)
 class OneLook(AIPlayer, ABC):
     @abstractmethod
-    # heuristic for to evaluate states
+    # heuristic for to evaluate plays
     def heuristic(self, play):
         pass
 
     # nextMove algorithm to choose move
-    def nextMove(self):
+    def nextMoves(self):
         allPlays = util.getAllPlays(self.board, self.hand)
         bestH = float("-inf")
         bestPlay = None
@@ -23,7 +23,7 @@ class OneLook(AIPlayer, ABC):
                     bestH = h
                     bestPlay = play
                     bestTile = tile
-        return bestTile, bestPlay
+        return [(bestTile, bestPlay)]
 
     # behaviour when no moves are found
     def noMoves(self):

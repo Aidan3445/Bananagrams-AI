@@ -3,8 +3,9 @@ import pygame as pg
 
 from Util import BananagramsUtil as util
 from HumanPlayer import Human
-from LongestWordPlayer import LongestWord
+from LongestWordPlayer import LongestOneLook
 from ScabbleOneLookPlayer import ScrabbleOneLook
+from testAStar import TestAStar
 
 
 class Bananagrams:
@@ -61,8 +62,9 @@ class Bananagrams:
             if util.countTiles(self.tilePool) == 0:
                 for i, winner in enumerate(self.players, 1):
                     if winner == player:
-                        print("Player", i, winner, "Wins!")
-                        self.gameOver = True
+                        if util.countTiles(winner.hand) == 0:
+                            print("Player", i, winner, "Wins!")
+                            self.gameOver = True
                         pg.display.update()
                         return
                 return
@@ -71,10 +73,6 @@ class Bananagrams:
 
     # create a random starting hand params: size of hand, number of players
     def resetPlayers(self, size=20):
-        # official Bananagrams tile set
-        self.tilePool = {"A": 13, "B": 3, "C": 3, "D": 6, "E": 18, "F": 3, "G": 4, "H": 3, "I": 12, "J": 2, "K": 2,
-                         "L": 5, "M": 3, "N": 8, "O": 11, "P": 3, "Q": 2, "R": 9, "S": 6, "T": 9, "U": 6, "V": 3,
-                         "W": 3, "X": 2, "Y": 3, "Z": 2}
         # an empty set of all letters
         emptySet = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0, "F": 0, "G": 0, "H": 0, "I": 0, "J": 0, "K": 0,
                     "L": 0, "M": 0, "N": 0, "O": 0, "P": 0, "Q": 0, "R": 0, "S": 0, "T": 0, "U": 0, "V": 0,
@@ -87,5 +85,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([ScrabbleOneLook(), LongestWord(), ScrabbleOneLook(), LongestWord()])
+game = Bananagrams([Human(), TestAStar()])
 game.newGame()
