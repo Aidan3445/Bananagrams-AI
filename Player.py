@@ -30,6 +30,64 @@ class Player(ABC):
     def __str__(self):
         pass
 
+    @abstractmethod
+    # make next move
+    def play(self):
+        pass
+
+    # play a letter from your hand params: letter to play
+    def playLetter(self, letter):
+        if self.hand[letter] > 0:  # check hand for typed letter
+            if self.center in self.board:  # delete if space is currently used
+                self.delete()
+            self.board[self.center] = letter
+            self.hand[letter] -= 1
+            self.shiftView(x=self.dir[0], y=self.dir[1])
+        elif self.center in self.board:  # typed same as center
+            if self.board[self.center] == letter:
+                self.shiftView(x=self.dir[0], y=self.dir[1])
+
+    # delete tile
+    def delete(self):
+        if self.center not in self.board:
+            deleteDir = (abs(self.dir[0]), abs(self.dir[1]))  # if tile not in board check tile in reverse of self.dir
+            back = (self.center[0] + deleteDir[0], self.center[1] + deleteDir[1])
+            if back in self.board:
+                letter = self.board[back]
+                self.board.pop(back)
+                self.hand[letter] += 1
+                self.shiftView(x=deleteDir[0], y=deleteDir[1])
+                return letter
+        else:
+            letter = self.board[self.center]  # if tile is occupied, delete it
+            self.board.pop(self.center)
+            self.hand[letter] += 1
+            return letter
+
+    # dump board and get new tiles params: letter to dump from hand
+    def dump(self, letter):
+        if self.hand[letter] > 0:
+            self.hand[letter] -= 1  # decrease count
+            for i in range(2):
+                if util.countTiles(self.game.tilePool) > 0:
+                    self.hand[util.pullTile(self.game.tilePool)] += 1  # pick random tile
+            self.game.tilePool[letter] += 1  # add tile back to pool
+
+    # do every frame params: pos to place in the window
+    def onTick(self, pos):
+        self.play()  # make move
+        self.draw(pos)
+        pg.display.update()
+        pg.time.Clock().tick(60)
+
+    # add the player to the game window
+    def draw(self, pos):
+        self.drawBoard()  # update board image
+        self.drawHand()
+        pg.draw.rect(self.boardScreen, "grey", self.boardScreen.get_rect(), 5)  # make frame
+        align = self.boardScreen.get_rect(topleft=pos)
+        self.game.gameScreen.blit(self.boardScreen, align)
+
     # draw board view
     def drawBoard(self):
         self.boardScreen.fill("yellow")  # yellow background
@@ -89,57 +147,3 @@ class Player(ABC):
         self.scale = max(5, self.scale)  # min visible is 5 x 4
         self.scale = min(25, self.scale)  # max visible is 25 x 20
         self.size = int(self.screen / self.scale)
-
-    # play a letter from your hand params: letter to play
-    def playLetter(self, letter):
-        if self.hand[letter] > 0:  # check hand for typed letter
-            if self.center in self.board:  # delete if space is currently used
-                self.delete()
-            self.board[self.center] = letter
-            self.hand[letter] -= 1
-            self.shiftView(x=self.dir[0], y=self.dir[1])
-        elif self.center in self.board:  # typed same as center
-            if self.board[self.center] == letter:
-                self.shiftView(x=self.dir[0], y=self.dir[1])
-
-    # delete tile
-    def delete(self):
-        if self.center not in self.board:
-            deleteDir = (abs(self.dir[0]), abs(self.dir[1]))  # if tile not in board check tile in reverse of self.dir
-            back = (self.center[0] + deleteDir[0], self.center[1] + deleteDir[1])
-            if back in self.board:
-                letter = self.board[back]
-                self.board.pop(back)
-                self.hand[letter] += 1
-                self.shiftView(x=deleteDir[0], y=deleteDir[1])
-                return letter
-        else:
-            letter = self.board[self.center]  # if tile is occupied, delete it
-            self.board.pop(self.center)
-            self.hand[letter] += 1
-            return letter
-
-    # dump board and get new tiles params: letter to dump from hand
-    def dump(self, letter):
-        if self.hand[letter] > 0:
-            self.hand[letter] -= 1  # decrease count
-            for i in range(2):
-                if util.countTiles(self.game.tilePool) > 0:
-                    self.hand[util.pullTile(self.game.tilePool)] += 1  # pick random tile
-            self.game.tilePool[letter] += 1  # add tile back to pool
-
-    # do every frame params: pos to place in the window
-    def onTick(self, pos):
-        self.play()  # make move
-        self.drawBoard()  # update board image
-        self.drawHand()
-        pg.draw.rect(self.boardScreen, "grey", self.boardScreen.get_rect(), 5)  # make frame
-        align = self.boardScreen.get_rect(topleft=pos)
-        self.game.gameScreen.blit(self.boardScreen, align)
-        pg.display.update()
-        pg.time.Clock().tick(60)
-
-    @abstractmethod
-    # make next move
-    def play(self):
-        pass

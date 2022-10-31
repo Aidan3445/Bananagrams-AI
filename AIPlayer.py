@@ -6,6 +6,10 @@ import pygame as pg
 
 # abstract class for all AI players
 class AIPlayer(Player, ABC):
+    def __init__(self):
+        super().__init__()
+        self.wordCount = 0
+
     @abstractmethod
     # heuristic for to evaluate a state or a play
     def heuristic(self, toEval):
@@ -16,10 +20,12 @@ class AIPlayer(Player, ABC):
     def nextMoves(self):
         pass
 
-    @abstractmethod
     # behaviour when no moves are found
     def noMoves(self):
-        pass
+        if util.countTiles(self.hand) == 0:
+            self.game.peel(self)
+        else:
+            self.randomDump()
 
     # dump a random letter
     def randomDump(self):
@@ -37,6 +43,7 @@ class AIPlayer(Player, ABC):
             if connect is None:
                 self.noMoves()
                 return  # no plays left
+            self.wordCount += 1
             word, offset, direction = play
             self.center = (connect[0] - (offset * direction[0]), connect[1] - (offset * direction[1]))  # set center
             self.dir = direction  # set direction

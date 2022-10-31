@@ -25,9 +25,3 @@ class OneLook(AIPlayer, ABC):
                     bestTile = tile
         return [(bestTile, bestPlay)]
 
-    # behaviour when no moves are found
-    def noMoves(self):
-        if util.countTiles(self.hand) == 0:
-            self.game.peel(self)
-        else:
-            self.randomDump()
