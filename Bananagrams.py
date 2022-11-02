@@ -76,10 +76,10 @@ class Bananagrams:
                 if util.countTiles(player.hand) == 0:
                     valid, invalid = util.check(player.board)
                     if not invalid:
-                        print("Player", self.players.index(player), player, "Wins!")
+                        print("Player", self.players.index(player) + 1, player, "Wins!")
                         print(valid)
                     else:
-                        print("Player", self.players.index(player), player, "Cheated!")
+                        print("Player", self.players.index(player) + 1, player, "Cheated!")
                         print(invalid)
                     self.gameOver = True
                 pg.display.update()
@@ -101,5 +101,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([])
+game = Bananagrams([ScrabbleAStar(), LongestAStar()])
 game.newGame()
