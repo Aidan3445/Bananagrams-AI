@@ -4,7 +4,7 @@ import pygame as pg
 from Util import BananagramsUtil as util
 from HumanPlayer import Human
 from LongestWordPlayer import *
-from ScabblePlayer import *
+from ScrabblePlayer import *
 
 
 class Bananagrams:
@@ -101,5 +101,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([ScrabbleAStar(), LongestAStar()])
+game = Bananagrams([LongestOneLook(), LongestAStar()])
 game.newGame()
