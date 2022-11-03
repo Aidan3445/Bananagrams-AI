@@ -25,6 +25,9 @@ class Player(ABC):
             return other.playerID == self.playerID
         return False
 
+    def __hash__(self):
+        return hash(self.playerID)
+
     @abstractmethod
     # what should return when printed
     def __str__(self):
@@ -74,11 +77,12 @@ class Player(ABC):
             self.game.tilePool[letter] += 1  # add tile back to pool
 
     # do every frame params: pos to place in the window
-    def onTick(self, pos):
+    def onTick(self, pos=None):
         self.play()  # make move
-        self.draw(pos)
-        pg.display.update()
-        pg.time.Clock().tick(60)
+        if pos is not None:
+            self.draw(pos)
+            pg.display.update()
+            pg.time.Clock().tick(60)
 
     # add the player to the game window
     def draw(self, pos):

@@ -34,9 +34,6 @@ class AIPlayer(Player, ABC):
 
     # evaluate and make next move
     def play(self):
-        for event in pg.event.get():  # input event handler
-            if event.type == pg.QUIT:
-                util.quit()
         moves = self.nextMoves()  # tile to connect to, play to make off that tile
         for move in moves:
             connect, play = move
