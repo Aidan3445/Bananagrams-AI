@@ -58,13 +58,15 @@ class BananagramsUtil:
             nextTile = (nextTile[0] - 1, nextTile[1])
         return boardCopy, handCopy
 
-
     @staticmethod
     # check board for valid words params: board to check
     def check(board):
-        # TODO: add check for islands
-        invalid = []
         valid = []
+        invalid = []
+        islands = BananagramsUtil.islandCheck(board)
+        if islands:
+            v, i = BananagramsUtil.check(islands)
+            invalid += v
         firstTiles = BananagramsUtil.getFirstTiles(board)
         for tile in firstTiles:  # check each word starting from the found firstTiles
             x, y = firstTiles[tile]
@@ -106,6 +108,39 @@ class BananagramsUtil:
             if directions != (0, 0):
                 firstTiles[tile] = directions
         return firstTiles
+
+    @staticmethod
+    # run bfs to check that all tiles are connected
+    def islandCheck(board):
+        if len(board) > 0:
+            allTiles = list(board)
+            frontier = list()
+            explored = set()
+            start = allTiles[0]
+            frontier.insert(0, start)
+            while len(frontier) > 0:
+                current = frontier.pop()
+                explored.add(current)
+                for successor in BananagramsUtil.getSuccessors(board, current):
+                    if successor not in explored:
+                        if successor not in frontier:
+                            frontier.insert(0, successor)
+            island = set(allTiles) - explored
+            islandTiles = {}
+            for tile in island:
+                islandTiles[tile] = board[tile]
+            return islandTiles
+        return {}
+
+    @staticmethod
+    def getSuccessors(board, current):
+        successors = []
+        possibleTiles = [(current[0] + 1, current[1]), (current[0] - 1, current[1]),
+                         (current[0], current[1] + 1), (current[0], current[1] - 1)]
+        for t in possibleTiles:
+            if t in board:
+                successors.append(t)
+        return successors
 
     @staticmethod
     # get the plays available params: board to play on, hand to play from

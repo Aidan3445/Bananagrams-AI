@@ -1,5 +1,6 @@
 import random
 import time
+import pygame as pg
 
 from LongestWordPlayer import *
 from ScrabblePlayer import *
@@ -14,7 +15,7 @@ class BananaStats:
         self.tilePool = {}  # pool of tiles left
         self.handSize = handSize
         self.count = 0
-        self.runCount = runCount
+        self.runs = runCount
         self.stats = {}
         self.gameOver = False
         if seed is not None:
@@ -34,8 +35,16 @@ class BananaStats:
 
     # play current game
     def play(self):
+        pg.init()
         order = list(range(len(self.players)))
         while not self.gameOver:  # play loop
+            if self.runs == 0:
+                for e in pg.event.get():
+                    if e.type == pg.QUIT:
+                        for p in self.stats:
+                            print(p, self.stats[p])
+                        print("--- average time: %s seconds ---" % ((time.time() - start_time) / self.count))
+                        util.quit()
             random.shuffle(order)
             for i in order:
                 p = self.players[i]
@@ -43,11 +52,13 @@ class BananaStats:
                 if self.gameOver:
                     break
         self.count += 1
-        if self.count < self.runCount:
+        if self.count < self.runs or self.runs == 0:
             self.newGame()
         else:
             for p in self.stats:
                 print(p, self.stats[p])
+            print("--- average time: %s seconds ---" % ((time.time() - start_time) / self.count))
+            return
 
     # draw one tile for all players
     def peel(self, player=None):
@@ -57,7 +68,7 @@ class BananaStats:
                     valid, invalid = util.check(player.board)
                     if not invalid:
                         print("Player", self.players.index(player) + 1, player, "Wins!")
-                        self.stats[player] += 1
+                        self.stats[player] += 1  # TODO: change to json write
                         print(valid)
                     else:
                         print("Player", self.players.index(player) + 1, player, "Cheated!")
@@ -82,9 +93,8 @@ class BananaStats:
 
 
 start_time = time.time()
-runs = 1
+runs = 0
 game = BananaStats([LongestOneLook(), LongestAStar(), ScrabbleOneLook(), ScrabbleAStar()], runs)
 game.newGame()
 print("--- total time:   %s seconds ---" % (time.time() - start_time))
-print("--- average time: %s seconds ---" % ((time.time() - start_time) / runs))
 quit()
