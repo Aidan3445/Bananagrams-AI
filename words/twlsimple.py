@@ -269,7 +269,9 @@ class _Dawg(object):
         for word in self._anagram(bag):
             yield word
 
-
+""""
+https://github.com/lorenbrichter/Words
+"""
 _DAWG = _Dawg(
     "eJxsfY2aq6Cy7LM6kZW4x0g2YNYyT3/pquqG7HO/mVDVTfMrIiLisizLo/+ntTvbce9uXZa9/28bHJP6r6zvpfw6QvE373+E72Sae4"
     "+ohGvQNjjd0/7f+Z52x7r89L/+f8MPjulumzm/5kBsqWw9P8a2YyL7BZqLAMan3GT4p3Xnd4Fj8p6PJDDx+YKTSnKk1txjhZMIVi2G"
