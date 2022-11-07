@@ -1,7 +1,7 @@
 import sys
 import random
 import pygame as pg
-import words.twl as words
+import words.twl as scrabblewords
 
 
 class BananagramsUtil:
@@ -60,12 +60,12 @@ class BananagramsUtil:
 
     @staticmethod
     # check board for valid words params: board to check
-    def check(board):
+    def check(board, words=scrabblewords):
         valid = []
         invalid = []
         islands = BananagramsUtil.islandCheck(board)
         if islands:
-            v, i = BananagramsUtil.check(islands)
+            v, i = BananagramsUtil.check(islands, words)
             invalid += v
         firstTiles = BananagramsUtil.getFirstTiles(board)
         for tile in firstTiles:  # check each word starting from the found firstTiles
@@ -144,18 +144,18 @@ class BananagramsUtil:
 
     @staticmethod
     # get the plays available params: board to play on, hand to play from
-    def getAllPlays(board, hand):
+    def getAllPlays(board, hand, words=scrabblewords):
         handString = BananagramsUtil.handToString(hand)
         allPlays = {}
         for tile in board:
-            allPlays[tile] = BananagramsUtil.getTilePlays(handString, tile, board)
+            allPlays[tile] = BananagramsUtil.getTilePlays(handString, tile, board, words)
         if not allPlays:
-            allPlays[(0, 0)] = BananagramsUtil.getTilePlays(handString)
+            allPlays[(0, 0)] = BananagramsUtil.getTilePlays(handString, words)
         return allPlays
 
     @staticmethod
     # get words to play off of letter params: letters in hand, letter to play off, boundaries for word length
-    def getTilePlays(letters, tile=None, board=None):
+    def getTilePlays(letters, tile=None, board=None, words=scrabblewords):
         if tile is None or board is None:
             allWords = list(words.anagram(letters))  # empty board means all anagrams are valid
             playableWords = []
@@ -184,7 +184,7 @@ class BananagramsUtil:
                 for letter in word:
                     test[nextTile] = letter
                     nextTile = (nextTile[0] - 1, nextTile[1])
-                _, invalid = BananagramsUtil.check(test)  # check for play validity
+                _, invalid = BananagramsUtil.check(test, words)  # check for play validity
                 if not invalid:
                     playableWords.append((word, before, (-1, 0)))
             # down checks
@@ -194,7 +194,7 @@ class BananagramsUtil:
                 for letter in word:
                     test[nextTile] = letter
                     nextTile = (nextTile[0], nextTile[1] - 1)
-                _, invalid = BananagramsUtil.check(test)  # check for play validity
+                _, invalid = BananagramsUtil.check(test, words)  # check for play validity
                 if not invalid:
                     playableWords.append((word, before, (0, -1)))
             # TODO: add "bridge" plays that span 2 or more separated tiles

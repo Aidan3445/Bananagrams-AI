@@ -4,6 +4,7 @@ import pygame as pg
 from HumanPlayer import Human
 from LongestWordPlayer import *
 from ScrabblePlayer import *
+import words.twl as words
 
 
 class Bananagrams:
@@ -73,7 +74,7 @@ class Bananagrams:
         for p in self.players:
             if util.countTiles(self.tilePool) < len(self.players):
                 if util.countTiles(player.hand) == 0:
-                    valid, invalid = util.check(player.board)
+                    valid, invalid = util.check(player.board, words)
                     if not invalid:
                         print("Player", self.players.index(player) + 1, player, "Wins!")
                         print(valid)
@@ -100,5 +101,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([LongestAStar()])
+game = Bananagrams([LongestSimpleDictOneLook(), LongestOneLook()])
 game.newGame()
