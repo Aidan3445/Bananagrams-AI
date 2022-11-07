@@ -5,6 +5,7 @@ from HumanPlayer import Human
 from LongestWordPlayer import *
 from ScrabblePlayer import *
 import words.twl as words
+from SimpleDictTestPlayer import TestSimpleDictOneLook
 
 
 class Bananagrams:
@@ -101,5 +102,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([LongestSimpleDictOneLook(), LongestOneLook()])
+game = Bananagrams([TestSimpleDictOneLook(), ScrabbleOneLook(), LongestSimpleDictOneLook()])
 game.newGame()
