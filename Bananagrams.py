@@ -100,5 +100,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([LongestAStar()])
+game = Bananagrams([Human()])
 game.newGame()

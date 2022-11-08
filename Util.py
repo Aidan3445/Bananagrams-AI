@@ -1,5 +1,8 @@
+import heapq
 import sys
 import random
+from pprint import pprint
+
 import pygame as pg
 import words.twl as words
 
@@ -147,8 +150,13 @@ class BananagramsUtil:
     def getAllPlays(board, hand):
         handString = BananagramsUtil.handToString(hand)
         allPlays = {}
+        # for tile, plays in BananagramsUtil.getBridgeMoves(handString, board):
+        #     allPlays[tile] = plays
         for tile in board:
-            allPlays[tile] = BananagramsUtil.getTilePlays(handString, tile, board)
+            if tile in allPlays:
+                allPlays[tile] += BananagramsUtil.getTilePlays(handString, tile, board)
+            else:
+                allPlays[tile] = BananagramsUtil.getTilePlays(handString, tile, board)
         if not allPlays:
             allPlays[(0, 0)] = BananagramsUtil.getTilePlays(handString)
         return allPlays
@@ -197,8 +205,47 @@ class BananagramsUtil:
                 _, invalid = BananagramsUtil.check(test)  # check for play validity
                 if not invalid:
                     playableWords.append((word, before, (0, -1)))
-            # TODO: add "bridge" plays that span 2 or more separated tiles
         return playableWords
+
+    @staticmethod
+    # get plays that bridge between two t or more tiles already on the board
+    def getBridgeMoves(letters, board):
+        left, right, top, bottom = BananagramsUtil.getBoardArea(board)
+        cols = {}
+        rows = {}
+        moves = {}
+        for tile in board:  # get all tiles in each row and column
+            x, y = tile
+            if x not in cols:  # if not already in cols add a priority queue to the dictionary
+                colQ = PriorityQueue()
+                cols[x] = colQ
+            cols[x].update(tile, y)
+            if y not in rows:  # if not already in rows add a priority queue to the dictionary
+                rowQ = PriorityQueue()
+                rows[y] = rowQ
+            rows[y].update(tile, x)
+        allWords = []
+        for col in cols:
+            colQ = cols[col]
+            if colQ.count > 1:
+                tiles = [colQ.pop(), colQ.pop()]
+                while not colQ.isEmpty() and len(tiles) > 1:
+                    tileLetters = ""
+                    for tile in tiles:
+                        tileLetters += board[tile]
+                    allWords += list(words.anagram(letters + tileLetters))
+                    tiles.append(colQ.pop())
+        for row in rows:
+            rowQ = rows[row]
+            if rowQ.count > 1:
+                tiles = [rowQ.pop(), rowQ.pop()]
+                while not rowQ.isEmpty() and len(tiles) > 1:
+                    tileLetters = ""
+                    for tile in tiles:
+                        tileLetters += board[tile]
+                    allWords += list(words.anagram(letters + tileLetters))
+                    tiles.append(rowQ.pop())
+        print(allWords)
 
     @staticmethod
     # get the space above, below, left, and right of a tile params: board to search, tile to check
@@ -253,3 +300,47 @@ class BananagramsUtil:
             elif y < bottom:
                 bottom = y  # beyond running bottom
         return left, right, top, bottom
+
+
+class PriorityQueue:
+    """
+      Implements a priority queue data structure. Each inserted item
+      has a priority associated with it and the client is usually interested
+      in quick retrieval of the lowest-priority item in the queue. This
+      data structure allows O(1) access to the lowest-priority item.
+    """
+    def __init__(self):
+        self.heap = []
+        self.count = 0
+
+    def push(self, item, priority):
+        entry = (priority, self.count, item)
+        heapq.heappush(self.heap, entry)
+        self.count += 1
+
+    def pop(self):
+        (_, _, item) = heapq.heappop(self.heap)
+        return item
+
+    def isEmpty(self):
+        return len(self.heap) == 0
+
+    def update(self, item, priority):
+        # If item already in priority queue with higher priority, update its priority and rebuild the heap.
+        # If item already in priority queue with equal or lower priority, do nothing.
+        # If item not in priority queue, do the same thing as self.push.
+        for index, (p, c, i) in enumerate(self.heap):
+            if i == item:
+                if p <= priority:
+                    break
+                del self.heap[index]
+                self.heap.append((priority, c, item))
+                heapq.heapify(self.heap)
+                break
+        else:
+            self.push(item, priority)
+
+
+b = {(-1, 0): "A", (2, 0): "B", (2, 2): "C", (-1, 2): "D", (1, 2): "O"}
+BananagramsUtil.getBridgeMoves("LU", b)
+
