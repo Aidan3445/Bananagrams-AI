@@ -56,5 +56,3 @@ class Human(Player):
             elif event.type == pg.MOUSEWHEEL:
                 self.scaleView(1 * -np.sign(event.y))
             pg.display.update()
-
-

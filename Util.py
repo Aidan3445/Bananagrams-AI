@@ -219,33 +219,63 @@ class BananagramsUtil:
             if x not in cols:  # if not already in cols add a priority queue to the dictionary
                 colQ = PriorityQueue()
                 cols[x] = colQ
-            cols[x].update(tile, y)
+            cols[x].update(tile, -y)
             if y not in rows:  # if not already in rows add a priority queue to the dictionary
                 rowQ = PriorityQueue()
                 rows[y] = rowQ
-            rows[y].update(tile, x)
-        allWords = []
-        for col in cols:
+            rows[y].update(tile, -x)
+        colWords = {}  # holds all the words that are playable vertically
+        rowWords = {}  # holds all the words that are playable horizontally
+        for col in cols:  # check all columns
             colQ = cols[col]
-            if colQ.count > 1:
-                tiles = [colQ.pop(), colQ.pop()]
-                while not colQ.isEmpty() and len(tiles) > 1:
-                    tileLetters = ""
-                    for tile in tiles:
-                        tileLetters += board[tile]
-                    allWords += list(words.anagram(letters + tileLetters))
-                    tiles.append(colQ.pop())
-        for row in rows:
+            tileLetters = ""
+            for item in colQ.heap:  # add each tile's letter to string
+                tileLetters += board[item[2]]
+            colWords[col] = list(words.anagram(letters + tileLetters))  # find anagrams
+        for row in rows:  # same as columns above
             rowQ = rows[row]
-            if rowQ.count > 1:
-                tiles = [rowQ.pop(), rowQ.pop()]
-                while not rowQ.isEmpty() and len(tiles) > 1:
-                    tileLetters = ""
-                    for tile in tiles:
-                        tileLetters += board[tile]
-                    allWords += list(words.anagram(letters + tileLetters))
-                    tiles.append(rowQ.pop())
-        print(allWords)
+            tileLetters = ""
+            for item in rowQ.heap:
+                tileLetters += board[item[2]]
+            rowWords[row] = list(words.anagram(letters + tileLetters))
+        for col in colWords:  # check for words that fit in board vertically
+            colQ = cols[col]
+            colString = ""  # string of letters in order top to bottom
+            while not colQ.isEmpty():
+                colString += board[colQ.pop()].lower()
+            wordList = colWords[col]
+            for word in wordList:
+                prev = -1
+                for letter in word:  # are letters from the column in the correct order
+                    if letter in colString:
+                        index = colString.index(letter)
+                        if index > prev:
+                            prev = index
+                        else:  # letter was not in order, remove word and break loop
+                            temp = wordList
+                            temp.remove(word)
+                            colWords[col] = temp
+        for row in rowWords:  # same as cols above
+            rowQ = rows[row]
+            rowString = ""  # string of letters in order top to bottom
+            while not rowQ.isEmpty():
+                rowString += board[rowQ.pop()].lower()
+            wordList = rowWords[row]
+            for word in wordList:
+                prev = -1
+                for letter in word:
+                    if letter in rowString:
+                        index = rowString.index(letter)
+                        if index > prev:
+                            prev = index
+                        else:
+                            print("removed", word)
+                            temp = wordList
+                            temp.remove(word)
+                            rowWords[row] = temp
+
+        print(colWords)
+        print(rowWords)
 
     @staticmethod
     # get the space above, below, left, and right of a tile params: board to search, tile to check
@@ -309,6 +339,7 @@ class PriorityQueue:
       in quick retrieval of the lowest-priority item in the queue. This
       data structure allows O(1) access to the lowest-priority item.
     """
+
     def __init__(self):
         self.heap = []
         self.count = 0
@@ -340,7 +371,14 @@ class PriorityQueue:
         else:
             self.push(item, priority)
 
+    def findItem(self, item):
+        # if item is in heap, return priority
+        # otherwise return None
+        for p, c, v in self.heap:
+            if v == item:
+                return p
+        return None
 
-b = {(-1, 0): "A", (2, 0): "B", (2, 2): "C", (-1, 2): "D", (1, 2): "O"}
+
+b = {(-4, -2): "A", (0, -2): "B", (0, 0): "C", (-4, 0): "D", (-2, 0): "O"}
 BananagramsUtil.getBridgeMoves("LU", b)
-
