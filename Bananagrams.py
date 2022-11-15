@@ -100,5 +100,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([Human()])
+game = Bananagrams([ScrabbleOneLook(), ScrabbleAStar()])
 game.newGame()

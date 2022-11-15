@@ -4,6 +4,7 @@ import random
 from pprint import pprint
 
 import pygame as pg
+import numpy as np
 import words.twl as words
 
 
@@ -15,12 +16,26 @@ class BananagramsUtil:
         sys.exit()
 
     @staticmethod
-    # convert board/hand tiles to single string
+    # convert hand tiles to single string
     def handToString(hand):
         handString = ""
         for letter in hand:
             handString += letter * hand[letter]  # add letters to string
         return handString
+
+    @staticmethod
+    # convert a board tiles into a string display of the board
+    def printBoard(board):
+        left, right, top, bottom = BananagramsUtil.getBoardArea(board)
+        boardList = np.full(((top - bottom + 1), (left - right + 1)), "_").tolist()
+        for x, y in board:
+            boardList[top - y][left - x] = board[(x, y)]
+        boardString = ""
+        for line in boardList:
+            for tile in line:
+                boardString += tile + " "
+            boardString += "\n"
+        return boardString
 
     @staticmethod
     # get the number of tiles in a dictionary params: dictionary to count
@@ -93,6 +108,8 @@ class BananagramsUtil:
                     valid.append(word)
                 else:
                     invalid.append(word)
+            if x == 0 and y == 0:  # if tile has no direction it is a single tile and is not valid
+                invalid.append(board[tile])
         return valid, invalid
 
     @staticmethod
@@ -110,6 +127,11 @@ class BananagramsUtil:
             directions = (isH, isV)
             if directions != (0, 0):
                 firstTiles[tile] = directions
+            if not ((tile[0] - 1, tile[1]) in board or  # if single tile add with no direction
+                    (tile[0] + 1, tile[1]) in board or
+                    (tile[0], tile[1] - 1) in board or
+                    (tile[0], tile[1] + 1) in board):
+                firstTiles[tile] = (0, 0)
         return firstTiles
 
     @staticmethod
@@ -150,8 +172,9 @@ class BananagramsUtil:
     def getAllPlays(board, hand):
         handString = BananagramsUtil.handToString(hand)
         allPlays = {}
-        # for tile, plays in BananagramsUtil.getBridgeMoves(handString, board):
-        #     allPlays[tile] = plays
+        plays = BananagramsUtil.getBridgePlays(handString, board)
+        for tile in plays:
+            allPlays[tile] = plays[tile]
         for tile in board:
             if tile in allPlays:
                 allPlays[tile] += BananagramsUtil.getTilePlays(handString, tile, board)
@@ -209,11 +232,9 @@ class BananagramsUtil:
 
     @staticmethod
     # get plays that bridge between two t or more tiles already on the board
-    def getBridgeMoves(letters, board):
-        left, right, top, bottom = BananagramsUtil.getBoardArea(board)
+    def getBridgePlays(letters, board):
         cols = {}
         rows = {}
-        moves = {}
         for tile in board:  # get all tiles in each row and column
             x, y = tile
             if x not in cols:  # if not already in cols add a priority queue to the dictionary
@@ -238,44 +259,98 @@ class BananagramsUtil:
             for item in rowQ.heap:
                 tileLetters += board[item[2]]
             rowWords[row] = list(words.anagram(letters + tileLetters))
+        allPlays = {}
         for col in colWords:  # check for words that fit in board vertically
             colQ = cols[col]
             colString = ""  # string of letters in order top to bottom
+            colTiles = []
             while not colQ.isEmpty():
-                colString += board[colQ.pop()].lower()
+                tile = colQ.pop()
+                colString += board[tile].lower()
+                colTiles.append(tile)
             wordList = colWords[col]
-            for word in wordList:
-                prev = -1
-                for letter in word:  # are letters from the column in the correct order
-                    if letter in colString:
-                        index = colString.index(letter)
-                        if index > prev:
-                            prev = index
+            for word in wordList:  # go through all words
+                inOrder = True
+                prevInBoard = -1
+                prevInWord = -1
+                startTile = None
+                test = board.copy()
+                for wordIndex, letter in enumerate(word):  # are letters from the column in the correct order
+                    if letter in colString:  # is letter from board
+                        boardIndex = colString.index(letter)
+                        if prevInBoard == -1:  # set index of first tile from board
+                            prevInBoard = boardIndex
+                            prevInWord = wordIndex
+                            startTile = (col, wordIndex + colTiles[boardIndex][1])
+                        if prevInWord - wordIndex != colTiles[boardIndex][1] - colTiles[prevInBoard][1]:
+                            inOrder = False  # if letters are not same distance apart as tiles in board, it is invalid
+                            break
+                        else:
+                            prevInWord = wordIndex
+                        if boardIndex >= prevInBoard:  # comes after previous letter
+                            prevInBoard = boardIndex
                         else:  # letter was not in order, remove word and break loop
-                            temp = wordList
-                            temp.remove(word)
-                            colWords[col] = temp
+                            inOrder = False
+                            break
+                if startTile and inOrder:  # if passed checks above, play word onto copy of board
+                    valid = True
+                    for wordIndex, letter in enumerate(word):
+                        nextTile = (startTile[0], startTile[1] - wordIndex)
+                        if nextTile in test:
+                            if letter.upper() != test[nextTile]:
+                                valid = False
+                                break
+                        test[nextTile] = letter.upper()
+                    if valid and not BananagramsUtil.check(test)[1]:  # check copy of board for valid
+                        if startTile not in allPlays:
+                            allPlays[startTile] = []
+                        allPlays[startTile].append((word.upper(), 0, (0, -1)))
         for row in rowWords:  # same as cols above
             rowQ = rows[row]
-            rowString = ""  # string of letters in order top to bottom
+            rowString = ""
+            rowTiles = []
             while not rowQ.isEmpty():
-                rowString += board[rowQ.pop()].lower()
+                tile = rowQ.pop()
+                rowString += board[tile].lower()
+                rowTiles.append(tile)
             wordList = rowWords[row]
             for word in wordList:
-                prev = -1
-                for letter in word:
+                inOrder = True
+                prevInBoard = -1
+                prevInWord = -1
+                startTile = None
+                test = board.copy()
+                for wordIndex, letter in enumerate(word):
                     if letter in rowString:
-                        index = rowString.index(letter)
-                        if index > prev:
-                            prev = index
+                        boardIndex = rowString.index(letter)
+                        if prevInBoard == -1:
+                            prevInBoard = boardIndex
+                            prevInWord = wordIndex
+                            startTile = (wordIndex + rowTiles[boardIndex][0], row)
+                        if prevInWord - wordIndex != rowTiles[boardIndex][0] - rowTiles[prevInBoard][0]:
+                            inOrder = False
+                            break
                         else:
-                            print("removed", word)
-                            temp = wordList
-                            temp.remove(word)
-                            rowWords[row] = temp
-
-        print(colWords)
-        print(rowWords)
+                            prevInWord = wordIndex
+                        if boardIndex >= prevInBoard:
+                            prevInBoard = boardIndex
+                        else:
+                            inOrder = False
+                            break
+                if startTile and inOrder:
+                    valid = True
+                    for wordIndex, letter in enumerate(word):
+                        nextTile = (startTile[0] - wordIndex, startTile[1])
+                        if nextTile in test:
+                            if letter.upper() != test[nextTile]:
+                                valid = False
+                                break
+                        test[nextTile] = letter.upper()
+                    if valid and not BananagramsUtil.check(test)[1]:
+                        if startTile not in allPlays:
+                            allPlays[startTile] = []
+                        allPlays[startTile].append((word.upper(), 0, (-1, 0)))
+        return allPlays
 
     @staticmethod
     # get the space above, below, left, and right of a tile params: board to search, tile to check
@@ -380,5 +455,9 @@ class PriorityQueue:
         return None
 
 
-b = {(-4, -2): "A", (0, -2): "B", (0, 0): "C", (-4, 0): "D", (-2, 0): "O"}
-BananagramsUtil.getBridgeMoves("LU", b)
+b = {(0, -4): "B", (-1, -4): "R", (-2, -4): "A", (-3, -4): "I", (-4, -4): "N", (0, 0): "C", (-4, 0): "D", (-2, 0): "O",
+     (-4, -1): "R", (-4, -2): "A", (-4, -3): "I"}
+
+print(BananagramsUtil.printBoard(b))
+# print(BananagramsUtil.check(b))
+print(BananagramsUtil.getBridgePlays("LU", b))
