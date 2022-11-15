@@ -172,14 +172,17 @@ class BananagramsUtil:
     def getAllPlays(board, hand):
         handString = BananagramsUtil.handToString(hand)
         allPlays = {}
-        plays = BananagramsUtil.getBridgePlays(handString, board)
-        for tile in plays:
-            allPlays[tile] = plays[tile]
         for tile in board:
             if tile in allPlays:
                 allPlays[tile] += BananagramsUtil.getTilePlays(handString, tile, board)
             else:
                 allPlays[tile] = BananagramsUtil.getTilePlays(handString, tile, board)
+        bridgePlays = BananagramsUtil.getBridgePlays(handString, board)
+        for tile in bridgePlays:
+            if tile in allPlays:
+                allPlays[tile] += bridgePlays[tile]
+            else:
+                allPlays[tile] = bridgePlays[tile]
         if not allPlays:
             allPlays[(0, 0)] = BananagramsUtil.getTilePlays(handString)
         return allPlays
@@ -231,8 +234,10 @@ class BananagramsUtil:
         return playableWords
 
     @staticmethod
-    # get plays that bridge between two t or more tiles already on the board
+    # get plays that bridge between two or more tiles already on the board
     def getBridgePlays(letters, board):
+        if letters == "":
+            return {}
         cols = {}
         rows = {}
         for tile in board:  # get all tiles in each row and column
@@ -294,13 +299,17 @@ class BananagramsUtil:
                             break
                 if startTile and inOrder:  # if passed checks above, play word onto copy of board
                     valid = True
+                    fromHand = ""
                     for wordIndex, letter in enumerate(word):
                         nextTile = (startTile[0], startTile[1] - wordIndex)
                         if nextTile in test:
                             if letter.upper() != test[nextTile]:
                                 valid = False
                                 break
+                        else:  # add letters used from hand
+                            fromHand += letter
                         test[nextTile] = letter.upper()
+                    valid &= len(fromHand) > 0
                     if valid and not BananagramsUtil.check(test)[1]:  # check copy of board for valid
                         if startTile not in allPlays:
                             allPlays[startTile] = []
@@ -339,13 +348,17 @@ class BananagramsUtil:
                             break
                 if startTile and inOrder:
                     valid = True
+                    fromHand = ""
                     for wordIndex, letter in enumerate(word):
                         nextTile = (startTile[0] - wordIndex, startTile[1])
                         if nextTile in test:
                             if letter.upper() != test[nextTile]:
                                 valid = False
                                 break
+                        else:
+                            fromHand += letter
                         test[nextTile] = letter.upper()
+                    valid &= len(fromHand) > 0
                     if valid and not BananagramsUtil.check(test)[1]:
                         if startTile not in allPlays:
                             allPlays[startTile] = []
@@ -454,10 +467,11 @@ class PriorityQueue:
                 return p
         return None
 
+# b = {(0, -4): "B", (-1, -4): "R", (-2, -4): "A", (-3, -4): "I", (-4, -4): "N",
+#      (-4, 0): "D", (-4, -1): "R", (-4, -2): "A", (-4, -3): "I"}
+# b = {(0, -4): "B", (-1, -4): "R", (-2, -4): "A", (-3, -4): "I", (-4, -4): "N", (0, 0): "C",
+#      (-4, 0): "D", (-2, 0): "O", (-4, -1): "R", (-4, -2): "A", (-4, -3): "I"}
 
-b = {(0, -4): "B", (-1, -4): "R", (-2, -4): "A", (-3, -4): "I", (-4, -4): "N", (0, 0): "C", (-4, 0): "D", (-2, 0): "O",
-     (-4, -1): "R", (-4, -2): "A", (-4, -3): "I"}
-
-print(BananagramsUtil.printBoard(b))
+# print(BananagramsUtil.printBoard(b))
 # print(BananagramsUtil.check(b))
-print(BananagramsUtil.getBridgePlays("LU", b))
+# print(BananagramsUtil.getBridgePlays("A", b))

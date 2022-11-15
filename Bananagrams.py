@@ -44,6 +44,15 @@ class Bananagrams:
     def play(self):
         order = list(range(len(self.players)))
         while not self.gameOver:  # play loop
+            for event in pg.event.get():  # input event handler
+                if event.type == pg.QUIT:
+                    tilesLeft = util.handToString(self.tilePool)
+                    for p in self.players:
+                        valid, invalid = util.check(p.board)
+                        print(p, "\n    Valid:", valid, "\n    Invalid:", invalid)
+                        tilesLeft += util.handToString(p.hand)
+                    print("Tiles left:", tilesLeft)
+                    util.quit()
             random.shuffle(order)
             for i in order:
                 p = self.players[i]
@@ -100,5 +109,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([ScrabbleOneLook(), ScrabbleAStar()])
+game = Bananagrams([ScrabbleOneLook()])
 game.newGame()
