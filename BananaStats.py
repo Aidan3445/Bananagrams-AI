@@ -35,16 +35,8 @@ class BananaStats:
 
     # play current game
     def play(self):
-        pg.init()
         order = list(range(len(self.players)))
         while not self.gameOver:  # play loop
-            if self.runs == 0:
-                for e in pg.event.get():
-                    if e.type == pg.QUIT:
-                        for p in self.stats:
-                            print(p, self.stats[p])
-                        print("--- average time: %s seconds ---" % ((time.time() - start_time) / self.count))
-                        util.quit()
             random.shuffle(order)
             for i in order:
                 p = self.players[i]
@@ -70,6 +62,7 @@ class BananaStats:
                         print("Player", self.players.index(player) + 1, player, "Wins!")
                         self.stats[player] += 1  # TODO: change to json write
                         print(valid)
+                        print(util.boardToString(player.board))
                     else:
                         print("Player", self.players.index(player) + 1, player, "Cheated!")
                         print(invalid)
@@ -93,7 +86,7 @@ class BananaStats:
 
 
 start_time = time.time()
-runs = 0
+runs = 10
 game = BananaStats([LongestOneLook(), LongestAStar(), ScrabbleOneLook(), ScrabbleAStar()], runs)
 game.newGame()
 print("--- total time:   %s seconds ---" % (time.time() - start_time))

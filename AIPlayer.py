@@ -36,6 +36,7 @@ class AIPlayer(Player, ABC):
     def play(self):
         moves = self.nextMoves()  # tile to connect to, play to make off that tile
         for move in moves:
+            pre = self.board.copy()
             connect, play = move
             if connect is None:
                 self.noMoves()

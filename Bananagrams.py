@@ -20,7 +20,10 @@ class Bananagrams:
         self.window = pg.display.set_mode((screenSize, screenSize))  # board window
         self.gameOver = False
         if seed is not None:
-            random.seed(seed)  # random seed for consistent play
+            self.seed = seed
+        else:
+            self.seed = random.randint(0, 100000)
+        random.seed(self.seed)  # random seed for consistent play
 
     # make a new game
     def newGame(self):
@@ -49,8 +52,11 @@ class Bananagrams:
                     tilesLeft = util.handToString(self.tilePool)
                     for p in self.players:
                         valid, invalid = util.check(p.board)
-                        print(p, "\n    Valid:", valid, "\n    Invalid:", invalid)
-                        tilesLeft += util.handToString(p.hand)
+                        print(util.boardToString(p.board),
+                              p,
+                              "\n    Valid:", valid,
+                              "\n    Invalid:", invalid,
+                              "\n    Hand:", util.handToString(p.hand))
                     print("Tiles left:", tilesLeft)
                     util.quit()
             random.shuffle(order)
@@ -85,6 +91,7 @@ class Bananagrams:
                     valid, invalid = util.check(player.board)
                     if not invalid:
                         print("Player", self.players.index(player) + 1, player, "Wins!")
+                        print(util.boardToString(player.board))
                         print(valid)
                     else:
                         print("Player", self.players.index(player) + 1, player, "Cheated!")
@@ -109,5 +116,5 @@ class Bananagrams:
             self.peel()
 
 
-game = Bananagrams([ScrabbleOneLook()])
+game = Bananagrams([LongestOneLook(), LongestAStar(), ScrabbleOneLook(), ScrabbleAStar()])
 game.newGame()

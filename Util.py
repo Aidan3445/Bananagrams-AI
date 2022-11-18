@@ -1,11 +1,15 @@
 import heapq
 import sys
 import random
-from pprint import pprint
+import time
 
 import pygame as pg
 import numpy as np
 import words.twl as words
+
+nullHand = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0, "F": 0, "G": 0, "H": 0, "I": 0, "J": 0, "K": 0,
+            "L": 0, "M": 0, "N": 0, "O": 0, "P": 0, "Q": 0, "R": 0, "S": 0, "T": 0, "U": 0, "V": 0,
+            "W": 0, "X": 0, "Y": 0, "Z": 0}
 
 
 class BananagramsUtil:
@@ -25,7 +29,7 @@ class BananagramsUtil:
 
     @staticmethod
     # convert a board tiles into a string display of the board
-    def printBoard(board):
+    def boardToString(board):
         left, right, top, bottom = BananagramsUtil.getBoardArea(board)
         boardList = np.full(((top - bottom + 1), (left - right + 1)), "_").tolist()
         for x, y in board:
@@ -35,6 +39,7 @@ class BananagramsUtil:
             for tile in line:
                 boardString += tile + " "
             boardString += "\n"
+        boardString += "↑\n" + str((left, bottom))
         return boardString
 
     @staticmethod
@@ -68,7 +73,9 @@ class BananagramsUtil:
     @staticmethod
     # play a word from a hand onto a board
     # params: move to make, hand to play from, board to play on
-    def makeMove(move, board, hand):
+    def makeMove(move, board, hand=None):
+        if hand is None:
+            hand = nullHand
         connect, play = move
         word, offset, direction = play
         boardCopy = board.copy()  # make play on copy of current board and hand
@@ -179,11 +186,6 @@ class BananagramsUtil:
     def getAllPlays(board, hand):
         handString = BananagramsUtil.handToString(hand)
         allPlays = {}
-        for tile in board:
-            if tile in allPlays:
-                allPlays[tile] += BananagramsUtil.getTilePlays(handString, tile, board)
-            else:
-                allPlays[tile] = BananagramsUtil.getTilePlays(handString, tile, board)
         bridgePlays = BananagramsUtil.getBridgePlays(handString, board)
         for tile in bridgePlays:
             if tile in allPlays:
@@ -191,54 +193,18 @@ class BananagramsUtil:
             else:
                 allPlays[tile] = bridgePlays[tile]
         if not allPlays:
-            allPlays[(0, 0)] = BananagramsUtil.getTilePlays(handString)
+            allPlays[(0, 0)] = BananagramsUtil.getFirstPlays(handString)
         return allPlays
 
     @staticmethod
-    # get words to play off of letter
-    # params: letters in hand, letter to play off, boundaries for word length
-    def getTilePlays(letters, tile=None, board=None):
-        if tile is None or board is None:
-            allWords = list(words.anagram(letters))  # empty board means all anagrams are valid
-            playableWords = []
-            for word in allWords:
-                word = word.upper()
-                playableWords.append((word, 0, (-1, 0)))  # all first plays go across
-            return playableWords
-        tileLetter = board[tile]
-        restrictions = BananagramsUtil.getTileSpace(board, tile)
-        allWords = list(words.anagram(letters + tileLetter))
+    # get words to play from hand to blank board
+    # params: letters in hand
+    def getFirstPlays(letters):
+        allWords = list(words.anagram(letters))  # empty board means all anagrams are valid
         playableWords = []
-        left, right, top, bottom = restrictions
-        maxLength = max(left + right, top + bottom)
         for word in allWords:
             word = word.upper()
-            wordLength = len(word)
-            # remove word if too long or doesn't have tile letter
-            if wordLength > maxLength or tileLetter not in word:
-                continue
-            before = word.index(tileLetter)  # letters before tile letter
-            after = wordLength - before - 1  # letters after tile letter
-            # across checks
-            if before < left and after < right:
-                test = board.copy()  # make play on copy of current board
-                nextTile = (tile[0] + before, tile[1])
-                for letter in word:
-                    test[nextTile] = letter
-                    nextTile = (nextTile[0] - 1, nextTile[1])
-                _, invalid = BananagramsUtil.check(test)  # check for play validity
-                if not invalid:
-                    playableWords.append((word, before, (-1, 0)))
-            # down checks
-            if before < top and after < bottom:
-                test = board.copy()  # make play on copy of current board
-                nextTile = (tile[0], tile[1] + before)
-                for letter in word:
-                    test[nextTile] = letter
-                    nextTile = (nextTile[0], nextTile[1] - 1)
-                _, invalid = BananagramsUtil.check(test)  # check for play validity
-                if not invalid:
-                    playableWords.append((word, before, (0, -1)))
+            playableWords.append((word, 0, (-1, 0)))  # all first plays go across
         return playableWords
 
     @staticmethod
@@ -277,24 +243,35 @@ class BananagramsUtil:
 
         # check the order and spacing of letters in a word to make sure they fit in the board
         # params: word to check, list of [(letter, tile)]
-        def getFit(word, queueList):
+        def getFit(word, handString, queueList):
             startOffsets = []
             lenW = len(word)
             lenQ = len(queueList)
             for startIndex in range(1 - lenW, lenQ):
                 fits = True
                 fromHand = False
+                hand = list(handString)
                 for wordIndex, letter in enumerate(word):
+                    letter = letter.upper()
                     queueIndex = startIndex + wordIndex
                     if 0 <= queueIndex < lenQ:
                         queueLetter, _ = queueList[queueIndex]
-                        if queueLetter is not None and queueLetter != letter.upper():
+                        if queueLetter is None:
+                            if letter in hand:
+                                hand.remove(letter)
+                                fromHand = True
+                            else:
+                                fits = False
+                                break
+                        elif queueLetter != letter:
                             fits = False
                             break
-                        if queueLetter is None:
-                            fromHand = True
-                    else:
+                    elif letter in hand:
+                        hand.remove(letter)
                         fromHand = True
+                    else:
+                        fits = False
+                        break
                 if fits and fromHand:
                     startOffsets.append(-startIndex)
             return startOffsets
@@ -314,7 +291,7 @@ class BananagramsUtil:
             colList = queueToList(cols[col])
             firstTile = colList[0][1]
             for word in wordList:  # go through all words
-                startOffsets = getFit(word, colList)
+                startOffsets = getFit(word, handString, colList)
                 for offset in startOffsets:
                     test = board.copy()
                     startTile = (col, firstTile[1] + offset)
@@ -330,7 +307,7 @@ class BananagramsUtil:
             rowList = queueToList(rows[row])
             firstTile = rowList[0][1]
             for word in wordList:
-                startOffsets = getFit(word, rowList)
+                startOffsets = getFit(word, handString, rowList)
                 for offset in startOffsets:
                     test = board.copy()
                     startTile = (firstTile[0] + offset, row)
@@ -460,7 +437,7 @@ class PriorityQueue:
     # if item is in heap, return priority otherwise return None
     # params: item to search for
     def findItem(self, item):
-        
+
         for p, c, v in self.heap:
             if v == item:
                 return p
