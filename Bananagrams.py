@@ -20,10 +20,7 @@ class Bananagrams:
         self.window = pg.display.set_mode((screenSize, screenSize))  # board window
         self.gameOver = False
         if seed is not None:
-            self.seed = seed
-        else:
-            self.seed = random.randint(0, 100000)
-        random.seed(self.seed)  # random seed for consistent play
+            random.seed(seed)  # random seed for consistent play
 
     # make a new game
     def newGame(self):
@@ -47,18 +44,6 @@ class Bananagrams:
     def play(self):
         order = list(range(len(self.players)))
         while not self.gameOver:  # play loop
-            for event in pg.event.get():  # input event handler
-                if event.type == pg.QUIT:
-                    tilesLeft = util.handToString(self.tilePool)
-                    for p in self.players:
-                        valid, invalid = util.check(p.board)
-                        print(util.boardToString(p.board),
-                              p,
-                              "\n    Valid:", valid,
-                              "\n    Invalid:", invalid,
-                              "\n    Hand:", util.handToString(p.hand))
-                    print("Tiles left:", tilesLeft)
-                    util.quit()
             random.shuffle(order)
             for i in order:
                 p = self.players[i]
@@ -91,7 +76,6 @@ class Bananagrams:
                     valid, invalid = util.check(player.board)
                     if not invalid:
                         print("Player", self.players.index(player) + 1, player, "Wins!")
-                        print(util.boardToString(player.board))
                         print(valid)
                     else:
                         print("Player", self.players.index(player) + 1, player, "Cheated!")
@@ -115,6 +99,14 @@ class Bananagrams:
         for i in range(self.handSize):  # make random drawings in order
             self.peel()
 
+    # calculates odds of a peel happening based on player's hands
+    def calcPeelOdds(self ):
+        total = 0
+        for p in self.players:
+            total += 1 / util.countTiles(p.hand)
+        return total / len(self.players)
 
-game = Bananagrams([LongestOneLook(), LongestAStar(), ScrabbleOneLook(), ScrabbleAStar()])
+
+
+game = Bananagrams([LongestOneLookThinker(0)])
 game.newGame()
