@@ -1,5 +1,6 @@
 from OneLookPlayer import OneLook
 from AStarPlayer import AStar
+from ThinkAheadPlayer import ThinkAheadPlayer
 from Util import BananagramsUtil as util
 
 
@@ -26,3 +27,20 @@ class LongestAStar(AStar):
     # A* heuristics take in states, not plays params: state to evaluate
     def heuristic(self, state):  # this should guess the number of words left
         return util.countTiles(state.hand)
+
+
+class LongestOneLookThinker(ThinkAheadPlayer, LongestOneLook):
+    def __init__(self, sampleNumber):
+        super().__init__()
+        self.sampleNumber = sampleNumber
+
+    def sampleHeuristic(self, board):
+        words = util.check(board)[0]
+        wordCount = len(words)
+        total = 0
+        for w in words:
+            total += len(w)
+        return total / wordCount
+
+    def __str__(self):
+        return "Longest One-Look Thinker"
