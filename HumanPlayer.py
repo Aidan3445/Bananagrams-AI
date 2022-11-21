@@ -21,6 +21,36 @@ class Human(Player):
                 print("PEEL!")
                 self.game.peel(self)  # peel and test for game over
 
+    # play a letter from your hand
+    # params: letter to play
+    def playLetter(self, letter):
+        if self.hand[letter] > 0:  # check hand for typed letter
+            if self.center in self.board:  # delete if space is currently used
+                self.delete()
+            self.board[self.center] = letter
+            self.hand[letter] -= 1
+            self.shiftView(x=self.dir[0], y=self.dir[1])
+        elif self.center in self.board:  # typed same as center
+            if self.board[self.center] == letter:
+                self.shiftView(x=self.dir[0], y=self.dir[1])
+
+    # delete tile
+    def delete(self):
+        if self.center not in self.board:
+            deleteDir = abs(self.dir[0]), abs(self.dir[1])  # if tile not in board check tile in reverse of self.dir
+            back = (self.center[0] + deleteDir[0], self.center[1] + deleteDir[1])
+            if back in self.board:
+                letter = self.board[back]
+                self.board.pop(back)
+                self.hand[letter] += 1
+                self.shiftView(x=deleteDir[0], y=deleteDir[1])
+                return letter
+        else:
+            letter = self.board[self.center]  # if tile is occupied, delete it
+            self.board.pop(self.center)
+            self.hand[letter] += 1
+            return letter
+
     # take user input for play
     def play(self):
         for event in pg.event.get():  # input event handler
@@ -50,7 +80,6 @@ class Human(Player):
                         letter = self.delete()
                         if letter is not None:
                             self.dump(letter)
-                            print("Dumped", letter)
                 elif k == pg.K_RETURN:
                     self.check()
             elif event.type == pg.MOUSEWHEEL:

@@ -7,12 +7,14 @@ from Util import BananagramsUtil as util
 class OneLook(AIPlayer, ABC):
     @abstractmethod
     # heuristic for to evaluate plays
+    # params: play to evaluate
     def heuristic(self, play):
         pass
 
     # nextMove algorithm to choose move
-    def nextMoves(self):
-        allPlays = util.getAllPlays(self.board, self.hand)
+    # params: board to play on, hand to play from
+    def nextMoves(self, board, hand):
+        allPlays = util.getAllPlays(board, hand)
         bestH = float("-inf")
         bestPlay = None
         bestTile = None

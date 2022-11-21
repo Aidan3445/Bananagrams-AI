@@ -64,15 +64,15 @@ class BananagramsUtil:
     # params: dictionary to pull from
     def getRandomTile(tileSet):
         cnt = 0
-        index = random.randint(0, BananagramsUtil.countTiles(tileSet) - 1)
+        index = random.randint(0, BananagramsUtil.countTiles(tileSet))
         for letter in tileSet:
             cnt += tileSet[letter]
-            if cnt > index:  # once count breaks index barrier letter has been found
+            if cnt >= index:  # once count breaks index barrier letter has been found
                 return letter
 
     @staticmethod
     # play a word from a hand onto a board
-    # params: move to make, hand to play from, board to play on
+    # params: move to make, board to play on, OPT hand to play from,
     def makeMove(move, board, hand=None):
         if hand is None:
             hand = nullHand
@@ -82,9 +82,10 @@ class BananagramsUtil:
         handCopy = hand.copy()
         nextTile = (connect[0] - (offset * direction[0]), connect[1] - (offset * direction[1]))
         for letter in word:
-            boardCopy[nextTile] = letter
-            handCopy[letter] -= 1
-            nextTile = (nextTile[0] - 1, nextTile[1])
+            if nextTile not in boardCopy:
+                boardCopy[nextTile] = letter
+                handCopy[letter] -= 1
+            nextTile = (nextTile[0] + direction[0], nextTile[1] + direction[1])
         return boardCopy, handCopy
 
     @staticmethod
@@ -159,7 +160,7 @@ class BananagramsUtil:
             while len(frontier) > 0:
                 current = frontier.pop()
                 explored.add(current)
-                for successor in BananagramsUtil.getSuccessors(board, current):
+                for successor in BananagramsUtil.getNextSearchTiles(board, current):
                     if successor not in explored:
                         if successor not in frontier:
                             frontier.insert(0, successor)
@@ -171,7 +172,9 @@ class BananagramsUtil:
         return {}
 
     @staticmethod
-    def getSuccessors(board, current):
+    # get the next tiles in the search
+    # params: board to search, current tile in search
+    def getNextSearchTiles(board, current):
         successors = []
         possibleTiles = [(current[0] + 1, current[1]), (current[0] - 1, current[1]),
                          (current[0], current[1] + 1), (current[0], current[1] - 1)]
@@ -210,6 +213,7 @@ class BananagramsUtil:
     @staticmethod
     # get plays that bridge between two or more tiles already on the board
     def getBridgePlays(handString, board):
+        # helper methods
         # get all words in a column/row
         # params: priority queue with letters in a col/row
         def getWords(pQueue):
@@ -276,6 +280,7 @@ class BananagramsUtil:
                     startOffsets.append(-startIndex)
             return startOffsets
 
+        # main method
         if handString == "":
             return {}
         cols, rows = BananagramsUtil.getColsRows(board)

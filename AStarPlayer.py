@@ -8,14 +8,17 @@ from Util import PriorityQueue
 class AStar(AIPlayer, ABC):
     @abstractmethod
     # A* heuristics take in states, not plays params: state to evaluate
+    # params: state to evaluate
     def heuristic(self, state):
         pass  # this should be a guess as to how many words it will take to finish the hand
 
     # whether to terminate a search at a state params: state to test
+    # params: state to evaluate
     def terminateSearch(self, state):
         return util.countTiles(state.hand) <= util.countTiles(self.hand)/5
 
     # evaluate a set of moves to get their cost params: moves made
+    # params: moves to evaluate cost from
     def getCost(self, moves):
         playedTiles = 0
         for move in moves:
@@ -24,9 +27,10 @@ class AStar(AIPlayer, ABC):
         return cost
 
     # use A* to determine the best moves
-    def nextMoves(self):
+    # params: board to play on, hand to play from
+    def nextMoves(self, board, hand):
         frontier = PriorityQueue()
-        start = self.Node(self.State(self.board, self.hand), [])
+        start = self.Node(self.State(board, hand), [])
         frontier.push(start, self.heuristic(start.state))
         while not frontier.isEmpty():
             current = frontier.pop()

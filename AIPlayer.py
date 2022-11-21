@@ -12,12 +12,14 @@ class AIPlayer(Player, ABC):
 
     @abstractmethod
     # heuristic for to evaluate a state or a play
+    # params: state or play to evaluate
     def heuristic(self, toEval):
         pass
 
     @abstractmethod
     # nextMove algorithm to choose move
-    def nextMoves(self):
+    # params: board to play on, hand to play from
+    def nextMoves(self, board, hand):
         pass
 
     # behaviour when no moves are found
@@ -34,18 +36,13 @@ class AIPlayer(Player, ABC):
 
     # evaluate and make next move
     def play(self):
-        moves = self.nextMoves()  # tile to connect to, play to make off that tile
+        moves = self.nextMoves(self.board, self.hand)  # tile to connect to, play to make off that tile
         for move in moves:
-            connect, play = move
-            if connect is None:
+            if move == (None, None):
                 self.noMoves()
                 return  # no plays left
             self.wordCount += 1
-            word, offset, direction = play
-            self.center = (connect[0] - (offset * direction[0]), connect[1] - (offset * direction[1]))  # set center
-            self.dir = direction  # set direction
-            for letter in word:
-                self.playLetter(letter)  # play word
+            self.board, self.hand = util.makeMove(move, self.board, self.hand)
         self.resetView()
 
     def resetView(self):

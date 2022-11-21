@@ -7,8 +7,14 @@ from ScrabblePlayer import *
 
 
 class Bananagrams:
-    # constructor for a game of bananagrams params: list of players, OPT random seed
-    def __init__(self, listOfPlayers, handSize=21, seed=None, screenSize=800):
+    # constructor for a game of bananagrams
+    # params: OPT list of AI players, OPT size of each starting hand, OPT random seed, OPT size of screen in pixels
+    def __init__(self, listOfPlayers=None, handSize=21, seed=None, screenSize=800):
+        if listOfPlayers is None:
+            listOfPlayers = [Human()]
+            self.onlyHuman = True
+        else:
+            self.onlyHuman = False
         if len(listOfPlayers) < 1 or len(listOfPlayers) > 4:
             raise Exception("1 - 4 players")
         self.players = listOfPlayers  # list of players in the game
@@ -20,7 +26,10 @@ class Bananagrams:
         self.window = pg.display.set_mode((screenSize, screenSize))  # board window
         self.gameOver = False
         if seed is not None:
-            random.seed(seed)  # random seed for consistent play
+            self.seed = seed
+        else:
+            self.seed = random.randint(0, 100000)
+        random.seed(self.seed)  # random seed for consistent play
 
     # make a new game
     def newGame(self):
@@ -44,6 +53,19 @@ class Bananagrams:
     def play(self):
         order = list(range(len(self.players)))
         while not self.gameOver:  # play loop
+            if not self.onlyHuman:
+                for event in pg.event.get():  # input event handler
+                    if event.type == pg.QUIT:
+                        tilesLeft = util.handToString(self.tilePool)
+                        for p in self.players:
+                            valid, invalid = util.check(p.board)
+                            print(util.boardToString(p.board),
+                                  p,
+                                  "\n    Valid:", valid,
+                                  "\n    Invalid:", invalid,
+                                  "\n    Hand:", util.handToString(p.hand))
+                        print("Tiles left:", tilesLeft)
+                        util.quit()
             random.shuffle(order)
             for i in order:
                 p = self.players[i]
@@ -69,6 +91,7 @@ class Bananagrams:
                         pg.display.update()
 
     # draw one tile for all players
+    # params: OPT player that called peel
     def peel(self, player=None):
         for p in self.players:
             if util.countTiles(self.tilePool) < len(self.players):
@@ -76,9 +99,11 @@ class Bananagrams:
                     valid, invalid = util.check(player.board)
                     if not invalid:
                         print("Player", self.players.index(player) + 1, player, "Wins!")
+                        print(util.boardToString(player.board))
                         print(valid)
                     else:
                         print("Player", self.players.index(player) + 1, player, "Cheated!")
+                        print(util.boardToString(player.board))
                         print(invalid)
                     self.gameOver = True
                 pg.display.update()
@@ -100,13 +125,16 @@ class Bananagrams:
             self.peel()
 
     # calculates odds of a peel happening based on player's hands
-    def calcPeelOdds(self ):
+    def calcPeelOdds(self):
         total = 0
         for p in self.players:
-            total += 1 / util.countTiles(p.hand)
+            count = util.countTiles(p.hand)
+            if count <= 1:
+                total += 1
+            else:
+                total += 1 / count
         return total / len(self.players)
 
 
-
-game = Bananagrams([LongestOneLookThinker(0)])
+game = Bananagrams([LongestOneLookThinker(5)])
 game.newGame()

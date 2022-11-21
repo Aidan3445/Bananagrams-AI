@@ -35,11 +35,13 @@ class LongestOneLookThinker(ThinkAheadPlayer, LongestOneLook):
         self.sampleNumber = sampleNumber
 
     def sampleHeuristic(self, board):
+        print(util.boardToString(board), "evaluating...", end="   ")
         words = util.check(board)[0]
         wordCount = len(words)
         total = 0
         for w in words:
             total += len(w)
+        print("done evaluating:", total / wordCount)
         return total / wordCount
 
     def __str__(self):
