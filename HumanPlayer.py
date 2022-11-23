@@ -51,6 +51,10 @@ class Human(Player):
             self.hand[letter] += 1
             return letter
 
+    # shift the view params: OPT +/- x-shift, OPT +/- y-shift
+    def shiftView(self, x=0, y=0):
+        self.center = (self.center[0] + x, self.center[1] + y)
+
     # take user input for play
     def play(self):
         for event in pg.event.get():  # input event handler

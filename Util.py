@@ -2,6 +2,7 @@ import heapq
 import sys
 import random
 import time
+import os
 
 import pygame as pg
 import numpy as np
@@ -15,9 +16,32 @@ nullHand = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0, "F": 0, "G": 0, "H": 0, "I":
 class BananagramsUtil:
     @staticmethod
     # quit game
-    def quit():
+    def quit(startTime=None):
         pg.quit()
+        if startTime:
+            print("------Runtime: %s seconds" % (time.time() - startTime))
+        os.system('afplay /System/Library/Sounds/Glass.aiff')
         sys.exit()
+
+    @staticmethod
+    # make shallow copy of board
+    # params: board to copy
+    def copyBoard(board):
+        boardCopy = {}
+        for tile, letter in board.items():
+            x, y = tile
+            tileCopy = (x, y)
+            boardCopy[tileCopy] = letter
+        return boardCopy
+
+    @staticmethod
+    # make shallow copy of hand
+    # params: hand to copy
+    def copyHand(hand):
+        handCopy = {}
+        for letter, count in hand.items():
+            handCopy[letter] = count
+        return handCopy
 
     @staticmethod
     # convert hand tiles to single string
@@ -56,6 +80,8 @@ class BananagramsUtil:
     # params: dictionary to pull from
     def pullTile(tileSet):
         letter = BananagramsUtil.getRandomTile(tileSet)
+        if letter is None:
+            return None
         tileSet[letter] -= 1
         return letter
 
@@ -63,11 +89,16 @@ class BananagramsUtil:
     # get random tile from tile set
     # params: dictionary to pull from
     def getRandomTile(tileSet):
+        numTiles = BananagramsUtil.countTiles(tileSet)
+        if numTiles == 0:
+            return None
         cnt = 0
-        index = random.randint(0, BananagramsUtil.countTiles(tileSet))
+        index = random.randint(1, numTiles)
         for letter in tileSet:
             cnt += tileSet[letter]
             if cnt >= index:  # once count breaks index barrier letter has been found
+                if letter is None:
+                    print("letter is none")
                 return letter
 
     @staticmethod
@@ -251,32 +282,32 @@ class BananagramsUtil:
             startOffsets = []
             lenW = len(word)
             lenQ = len(queueList)
-            for startIndex in range(1 - lenW, lenQ):
+            for startIndex in range(1 - lenW, lenQ):  # check all connected offsets for word in col/row
                 fits = True
                 fromHand = False
                 hand = list(handString)
-                for wordIndex, letter in enumerate(word):
+                for wordIndex, letter in enumerate(word):  # check each letter in word for current offset
                     letter = letter.upper()
                     queueIndex = startIndex + wordIndex
-                    if 0 <= queueIndex < lenQ:
+                    if 0 <= queueIndex < lenQ:  # is letter within used col/row area
                         queueLetter, _ = queueList[queueIndex]
-                        if queueLetter is None:
-                            if letter in hand:
+                        if queueLetter is None:  # if tile is blank
+                            if letter in hand:  # make sure letter is in hand
                                 hand.remove(letter)
                                 fromHand = True
-                            else:
+                            else:  # if letter is not in hand offset doesn't fit
                                 fits = False
                                 break
-                        elif queueLetter != letter:
-                            fits = False
+                        elif queueLetter != letter:  # if tile is used and not the same as the letter of word
+                            fits = False  # offset doesn't fit
                             break
-                    elif letter in hand:
+                    elif letter in hand:  # letter is not within board area, make sure it is in te hand
                         hand.remove(letter)
                         fromHand = True
-                    else:
+                    else:  # letter is not within board area, and not in hand then offset doesn't fit
                         fits = False
                         break
-                if fits and fromHand:
+                if fits and fromHand:  # if passed checks above the offset fits and should be added to the list
                     startOffsets.append(-startIndex)
             return startOffsets
 
@@ -295,14 +326,12 @@ class BananagramsUtil:
             wordList = colWords[col]
             colList = queueToList(cols[col])
             firstTile = colList[0][1]
-            for word in wordList:  # go through all words
+            for word in wordList:  # go through all words in col
                 startOffsets = getFit(word, handString, colList)
-                for offset in startOffsets:
-                    test = board.copy()
+                for offset in startOffsets:  # go through all offsets for word
                     startTile = (col, firstTile[1] + offset)
-                    for wordIndex, letter in enumerate(word):
-                        nextTile = (startTile[0], startTile[1] - wordIndex)
-                        test[nextTile] = letter.upper()
+                    play = (word.upper(), 0, (0, -1))
+                    test, _ = BananagramsUtil.makeMove((startTile, play), board)
                     if not BananagramsUtil.check(test)[1]:  # check copy of board for valid
                         if startTile not in allPlays:
                             allPlays[startTile] = []
@@ -314,15 +343,13 @@ class BananagramsUtil:
             for word in wordList:
                 startOffsets = getFit(word, handString, rowList)
                 for offset in startOffsets:
-                    test = board.copy()
                     startTile = (firstTile[0] + offset, row)
-                    for wordIndex, letter in enumerate(word):
-                        nextTile = (startTile[0] - wordIndex, startTile[1])
-                        test[nextTile] = letter.upper()
+                    play = (word.upper(), 0, (-1, 0))
+                    test, _ = BananagramsUtil.makeMove((startTile, play), board)
                     if not BananagramsUtil.check(test)[1]:
                         if startTile not in allPlays:
                             allPlays[startTile] = []
-                        allPlays[startTile].append((word.upper(), 0, (-1, 0)))
+                        allPlays[startTile].append(play)
         return allPlays
 
     @staticmethod

@@ -1,6 +1,7 @@
 from OneLookPlayer import OneLook
 from AStarPlayer import AStar
-from ThinkAheadPlayer import ThinkAheadPlayer
+from SmartPlayer import SmartPlayer
+from TrialPlayer import TrialPlayer
 from Util import BananagramsUtil as util
 
 
@@ -17,10 +18,6 @@ class LongestOneLook(OneLook):
 
 # A* player that plays the longest words available
 class LongestAStar(AStar):
-    def __init__(self, maxDepth=0):
-        super().__init__()
-        self.maxDepth = maxDepth
-
     def __str__(self):
         return "Longest Word A*"
 
@@ -29,20 +26,53 @@ class LongestAStar(AStar):
         return util.countTiles(state.hand)
 
 
-class LongestOneLookThinker(ThinkAheadPlayer, LongestOneLook):
+class LongestOneLookTrial(TrialPlayer, LongestOneLook):
     def __init__(self, sampleNumber):
-        super().__init__()
-        self.sampleNumber = sampleNumber
+        super().__init__(sampleNumber)
 
     def sampleHeuristic(self, board):
-        print(util.boardToString(board), "evaluating...", end="   ")
         words = util.check(board)[0]
         wordCount = len(words)
         total = 0
         for w in words:
             total += len(w)
-        print("done evaluating:", total / wordCount)
         return total / wordCount
 
     def __str__(self):
-        return "Longest One-Look Thinker"
+        return "Longest One Look Trial: Sample Number %s" % self.sampleNumber
+
+
+class LongestAStarTrial(TrialPlayer, LongestAStar):
+    def __init__(self, sampleNumber):
+        super().__init__(sampleNumber)
+
+    def __str__(self):
+        return "Longest One Look Trial: Sample Number %s" % self.sampleNumber
+
+    def sampleHeuristic(self, board):
+        words = util.check(board)[0]
+        wordCount = len(words)
+        total = 0
+        for w in words:
+            total += len(w)
+        return total / wordCount
+
+
+class LongestOneLookSmarty(SmartPlayer, LongestOneLookTrial):
+    def __init__(self, sampleNumber, planAt):
+        super().__init__(sampleNumber, planAt)
+
+    def __str__(self):
+        if self.planAt == 1:
+            return "Longest One Look Smarty: Sample Number %s, Plan at 1 tile" % self.sampleNumber
+        return "Longest One Look Smarty: Sample Number %s, Plan at %s tile" % (self.sampleNumber, self.planAt)
+
+
+class LongestAStarSmarty(SmartPlayer, LongestAStarTrial):
+    def __init__(self, sampleNumber, planAt):
+        super().__init__(sampleNumber, planAt)
+
+    def __str__(self):
+        if self.planAt == 1:
+            return "Longest AStar Smarty: Sample Number %s, Plan at 1 tile" % self.sampleNumber
+        return "Longest AStar Smarty: Sample Number %s, Plan at %s tile" % (self.sampleNumber, self.planAt)

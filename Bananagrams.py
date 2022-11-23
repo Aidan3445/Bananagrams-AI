@@ -1,35 +1,57 @@
 import random
+import time
+
 import pygame as pg
 
 from HumanPlayer import Human
 from LongestWordPlayer import *
+from ShortestWordPlayer import *
 from ScrabblePlayer import *
 
 
 class Bananagrams:
     # constructor for a game of bananagrams
     # params: OPT list of AI players, OPT size of each starting hand, OPT random seed, OPT size of screen in pixels
-    def __init__(self, listOfPlayers=None, handSize=21, seed=None, screenSize=800):
-        if listOfPlayers is None:
+    def __init__(self, listOfPlayers=None, runCount=0, handSize=21, seed=None, screenSize=800):
+        if listOfPlayers is None or len(listOfPlayers) < 1:
             listOfPlayers = [Human()]
             self.onlyHuman = True
         else:
             self.onlyHuman = False
         if len(listOfPlayers) < 1 or len(listOfPlayers) > 4:
             raise Exception("1 - 4 players")
+        # base game
         self.players = listOfPlayers  # list of players in the game
+        self.order = order = list(range(len(self.players)))  # the order of players to play and peel for randomization
         self.tilePool = {}  # pool of tiles left
         self.handSize = handSize
-        self.timer = 0  # timer for game to compare players
+        self.gameOver = False
+
+        # lock prevention
+        self.noPeelCounter = 0
+
+        # pygame setup
+        pg.init()
+        pg.font.init()
         self.size = screenSize
         self.gameScreen = pg.Surface((1000, 1000))
         self.window = pg.display.set_mode((screenSize, screenSize))  # board window
-        self.gameOver = False
+
+        # randomization
         if seed is not None:
             self.seed = seed
         else:
             self.seed = random.randint(0, 100000)
         random.seed(self.seed)  # random seed for consistent play
+
+        # stats
+        self.startTime = time.time()
+        self.count = 0
+        self.runs = runCount
+        self.stats = {}  # TODO: replace with writing to JSON
+        for p in self.players:
+            self.stats[p] = 0  # initialize stats dictionary
+        self.stats["No Winner"] = 0  # for games with no winners
 
     # make a new game
     def newGame(self):
@@ -39,8 +61,6 @@ class Bananagrams:
                          "L": 5, "M": 3, "N": 8, "O": 11, "P": 3, "Q": 2, "R": 9, "S": 6, "T": 9, "U": 6, "V": 3,
                          "W": 3, "X": 2, "Y": 3, "Z": 2}
         self.resetPlayers()
-        pg.init()  # pygame setup
-        pg.font.init()
         for i, p in enumerate(self.players):
             x = 500 * (i % 2)  # place board in 2x2 grid of boards in game
             y = 500 * int(i / 2)
@@ -51,23 +71,14 @@ class Bananagrams:
 
     # play current game
     def play(self):
-        order = list(range(len(self.players)))
         while not self.gameOver:  # play loop
             if not self.onlyHuman:
                 for event in pg.event.get():  # input event handler
                     if event.type == pg.QUIT:
-                        tilesLeft = util.handToString(self.tilePool)
-                        for p in self.players:
-                            valid, invalid = util.check(p.board)
-                            print(util.boardToString(p.board),
-                                  p,
-                                  "\n    Valid:", valid,
-                                  "\n    Invalid:", invalid,
-                                  "\n    Hand:", util.handToString(p.hand))
-                        print("Tiles left:", tilesLeft)
-                        util.quit()
-            random.shuffle(order)
-            for i in order:
+                        self.quit()
+            random.shuffle(self.order)
+            self.noPeelCounter += 1
+            for i in self.order:
                 p = self.players[i]
                 x = 500 * (i % 2)  # place board in 2x2 grid of boards in game
                 y = 500 * int(i / 2)
@@ -80,36 +91,58 @@ class Bananagrams:
                     break
                 self.window.blit(pg.transform.scale(self.gameScreen, (self.size, self.size)), (0, 0))
                 pg.display.update()
-            self.timer += 1
-        while True:  # game over loop
-            for event in pg.event.get():  # input event handler
-                if event.type == pg.QUIT:
-                    util.quit()
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_SPACE:
-                        self.newGame()
-                        pg.display.update()
+            if self.noPeelCounter > 144:  # if no peels are called in 144 turns (number of tiles) then end game
+                self.stats["No Winner"] += 1
+                self.gameOver = True
+        if self.runs == 0:
+            while True:  # game over loop
+                for event in pg.event.get():  # input event handler
+                    if event.type == pg.QUIT:
+                        self.quit()
+                        util.quit()
+                    if event.type == pg.KEYDOWN:
+                        if event.key == pg.K_SPACE:
+                            self.newGame()
+        else:
+            self.count += 1
+            if self.count < self.runs:
+                self.newGame()
+            else:
+                self.quit()
 
     # draw one tile for all players
     # params: OPT player that called peel
     def peel(self, player=None):
-        for p in self.players:
+        self.noPeelCounter = 0  # PEEL! reset counter
+        peelOrder = self.order.copy()
+        if player is not None:  # set peel order to random order with peel caller first
+            playerIndex = self.players.index(player)
+            peelOrder.remove(playerIndex)
+            peelOrder = [playerIndex] + peelOrder
+        for i in peelOrder:
+            p = self.players[i]
             if util.countTiles(self.tilePool) < len(self.players):
                 if util.countTiles(player.hand) == 0:
                     valid, invalid = util.check(player.board)
                     if not invalid:
                         print("Player", self.players.index(player) + 1, player, "Wins!")
                         print(util.boardToString(player.board))
+                        self.stats[p] += 1
                         print(valid)
                     else:
                         print("Player", self.players.index(player) + 1, player, "Cheated!")
                         print(util.boardToString(player.board))
                         print(invalid)
                     self.gameOver = True
-                pg.display.update()
                 return
             pick = util.pullTile(self.tilePool)
-            p.hand[pick] += 1
+            if pick in p.hand:
+                p.hand[pick] += 1
+            else:
+                p.hand[pick] = 1
+            p.drawHand()
+        self.window.blit(pg.transform.scale(self.gameScreen, (self.size, self.size)), (0, 0))
+        pg.display.update()
 
     # create a random starting hand params: size of hand, number of players
     def resetPlayers(self):
@@ -135,6 +168,24 @@ class Bananagrams:
                 total += 1 / count
         return total / len(self.players)
 
+    # print out the recorded stats from the runs
+    def quit(self):
+        print("---------------PLAY ENDED---------------")
+        for p in self.stats:
+            print(p, "-->", self.stats[p])
+        util.quit(startTime=self.startTime)
 
-game = Bananagrams([LongestOneLookThinker(5)])
+
+lookies = [LongestOneLook(), ScrabbleOneLook()]
+starries = [LongestAStar(), ScrabbleAStar()]
+trialies = [LongestOneLookTrial(2), LongestOneLookTrial(3),
+            LongestOneLookTrial(4), LongestOneLookTrial(5)]
+smarties = [LongestOneLookSmarty(2, 5), LongestOneLookSmarty(2, 1),
+            LongestOneLookSmarty(5, 2), LongestOneLookSmarty(5, 1)]
+mixies = [ScrabbleOneLook(), LongestAStar(),
+          ScrabbleOneLookTrial(2), LongestOneLookSmarty(5, 2)]
+
+startTime = time.time()
+game = Bananagrams(smarties, runCount=200)
 game.newGame()
+

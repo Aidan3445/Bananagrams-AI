@@ -38,7 +38,7 @@ class AIPlayer(Player, ABC):
     def play(self):
         moves = self.nextMoves(self.board, self.hand)  # tile to connect to, play to make off that tile
         for move in moves:
-            if move == (None, None):
+            if None in move:
                 self.noMoves()
                 return  # no plays left
             self.wordCount += 1

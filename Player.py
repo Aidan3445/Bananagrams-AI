@@ -38,16 +38,17 @@ class Player(ABC):
     def play(self):
         pass
 
-    # dump board and get new tiles params: letter to dump from hand
+    # dump board and get new tiles
+    # params: letter to dump from hand
     def dump(self, letter):
-        if self.hand[letter] > 0:
+        if self.hand[letter] > 0 and util.countTiles(self.game.tilePool) > 1:
             self.hand[letter] -= 1  # decrease count
             for i in range(2):
-                if util.countTiles(self.game.tilePool) > 0:
-                    self.hand[util.pullTile(self.game.tilePool)] += 1  # pick random tile
+                self.hand[util.pullTile(self.game.tilePool)] += 1  # pick random tile
             self.game.tilePool[letter] += 1  # add tile back to pool
 
-    # do every frame params: pos to place in the window
+    # do every frame
+    # params: OPT pos to place in the window
     def onTick(self, pos=None):
         self.play()  # make move
         if pos is not None:
@@ -56,6 +57,7 @@ class Player(ABC):
             pg.time.Clock().tick(60)
 
     # add the player to the game window
+    # params: position within game screen
     def draw(self, pos):
         self.drawBoard()  # update board image
         self.drawHand()
@@ -71,7 +73,8 @@ class Player(ABC):
             for j in range(-scale, scale):
                 self.placeTile((i, j))  # draw the tile
 
-    # place tile params: tile position (x, y) on screen
+    # place tile
+    # params: tile position (x, y) on screen
     def placeTile(self, pos):
         origin = self.screen / 2  # center pixel of board
         x = origin - self.size * (pos[0] + 1 / 2)  # x val of top left corner of tile to draw
@@ -111,10 +114,6 @@ class Player(ABC):
         text = font.render(l2, True, 'black')
         align = text.get_rect(center=(self.screen / 2, self.screen - 12.5))
         self.boardScreen.blit(text, align)  # draw line 2
-
-    # shift the view params: OPT +/- x-shift, OPT +/- y-shift
-    def shiftView(self, x=0, y=0):
-        self.center = (self.center[0] + x, self.center[1] + y)
 
     # scale the view to show more/less of the board params: +/- change in scale
     def scaleView(self, scale=0):
