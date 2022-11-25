@@ -93,6 +93,7 @@ class Bananagrams:
                 pg.display.update()
             if self.noPeelCounter > 144:  # if no peels are called in 144 turns (number of tiles) then end game
                 self.stats["No Winner"] += 1
+                print("Stalemate, No Winner")
                 self.gameOver = True
         if self.runs == 0:
             while True:  # game over loop
@@ -170,7 +171,7 @@ class Bananagrams:
 
     # print out the recorded stats from the runs
     def quit(self):
-        print("---------------PLAY ENDED---------------")
+        print("--------------------PLAY ENDED--------------------")
         for p in self.stats:
             print(p, "-->", self.stats[p])
         util.quit(startTime=self.startTime)

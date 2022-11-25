@@ -19,7 +19,7 @@ class BananagramsUtil:
     def quit(startTime=None):
         pg.quit()
         if startTime:
-            print("------Runtime: %s seconds" % (time.time() - startTime))
+            print("------Runtime: %s seconds------" % (time.time() - startTime))
         os.system('afplay /System/Library/Sounds/Glass.aiff')
         sys.exit()
 
