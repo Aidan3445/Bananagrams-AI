@@ -1,7 +1,7 @@
 import random
 import time
-
 import pygame as pg
+
 
 from HumanPlayer import Human
 from LongestWordPlayer import *
@@ -91,7 +91,8 @@ class Bananagrams:
                     break
                 self.window.blit(pg.transform.scale(self.gameScreen, (self.size, self.size)), (0, 0))
                 pg.display.update()
-            if self.noPeelCounter > 144:  # if no peels are called in 144 turns (number of tiles) then end game
+            # if no peels are called in the at most, the number of tiles in starting pool
+            if self.noPeelCounter > 144 - len(self.players) * self.handSize:
                 self.stats["No Winner"] += 1
                 print("Stalemate, No Winner")
                 self.gameOver = True
@@ -177,7 +178,7 @@ class Bananagrams:
         util.quit(startTime=self.startTime)
 
 
-lookies = [LongestOneLook(), ScrabbleOneLook()]
+lookies = [LongestOneLook(), ScrabbleOneLook(), ShortestOneLook()]
 starries = [LongestAStar(), ScrabbleAStar()]
 trialies = [LongestOneLookTrial(2), LongestOneLookTrial(3),
             LongestOneLookTrial(4), LongestOneLookTrial(5)]
@@ -187,6 +188,6 @@ mixies = [ScrabbleOneLook(), LongestAStar(),
           ScrabbleOneLookTrial(2), LongestOneLookSmarty(5, 2)]
 
 startTime = time.time()
-game = Bananagrams(smarties, runCount=1)
+game = Bananagrams(lookies, runCount=1)
 game.newGame()
 

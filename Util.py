@@ -70,10 +70,7 @@ class BananagramsUtil:
     # get the number of tiles in a dictionary
     # params: dictionary to count
     def countTiles(tileSet):
-        cnt = 0
-        for letter in tileSet:
-            cnt += tileSet[letter]  # add value
-        return cnt
+        return len(BananagramsUtil.handToString(tileSet))
 
     @staticmethod
     # pull a tile from the set

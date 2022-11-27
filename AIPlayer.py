@@ -27,10 +27,10 @@ class AIPlayer(Player, ABC):
         if util.countTiles(self.hand) == 0:
             self.game.peel(self)
         else:
-            self.randomDump()
+            self.dumpLogic()
 
-    # dump a random letter
-    def randomDump(self):
+    # default is dump a random letter
+    def dumpLogic(self):
         letter = util.getRandomTile(self.hand)
         self.dump(letter)
 
