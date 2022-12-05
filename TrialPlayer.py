@@ -82,7 +82,6 @@ class TrialPlayer(AIPlayer, ABC):
         sampleBoard = self.board.copy()
         score, sampleBoard, sampleHand = self.sampleMove(sampleBoard, sampleHand)
         if util.countTiles(sampleHand) + util.countTiles(self.game.tilePool) == 0:
-            print("can win")
             return float("inf"), sampleBoard, sampleHand
         return score, sampleBoard, sampleHand
 
@@ -107,4 +106,6 @@ class TrialPlayer(AIPlayer, ABC):
         elif dumpEval >= peelEval:  # elif dumping is the most optimal play
             self.noMoves()
             super().play()
+        if util.countTiles(self.hand) == 0:
+            self.noMoves()
         # otherwise, "pass" is the most optimal play

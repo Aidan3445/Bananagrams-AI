@@ -19,6 +19,6 @@ class SmartPlayer(TrialPlayer, ABC):
         else:
             super(TrialPlayer, self).play()
             self.resetView()
-        if util.countTiles(self.hand) == 0:
-            self.game.peel(self)
+            if util.countTiles(self.hand) == 0:
+                self.game.peel(self)
 

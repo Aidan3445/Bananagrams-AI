@@ -48,7 +48,25 @@ class AStar(AIPlayer, ABC):
                     cost = self.getCost(newMoves) + self.heuristic(successor)
                     child = self.Node(successor, newMoves)
                     frontier.update(child, cost)
-        return [(None, None)]  # no moves found
+        return self.NoAStar(board, hand)  # no moves found
+
+    # run if no A* moves found
+    def NoAStar(self, board, hand):
+        best = None
+        lowest = float("inf")
+        allPlays = util.getAllPlays(board, hand)
+        for tile in allPlays:
+            for play in allPlays[tile]:
+                move = (tile, play)
+                nextBoard, nextHand = util.makeMove(move, board, hand)
+                val = self.heuristic(self.State(nextBoard, nextHand))
+                if val < lowest:
+                    best = move
+                    lowest = val
+        if best:
+            return [best]
+        else:
+            return [(None, None)]
 
     # holds a game state which is the hand and the board (players do not know the tile pool)
     class State:
