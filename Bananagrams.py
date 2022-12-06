@@ -188,6 +188,6 @@ mixies = [ScrabbleOneLook(), LongestAStar(),
           ScrabbleOneLookTrial(2), LongestOneLookSmarty(5, 2)]
 
 startTime = time.time()
-game = Bananagrams(mixies, runCount=10, screenSize=1800)
+game = Bananagrams(mixies, runCount=100, screenSize=900)
 game.newGame()
 
