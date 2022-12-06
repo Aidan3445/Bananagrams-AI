@@ -200,6 +200,37 @@ class BananagramsUtil:
         return {}
 
     @staticmethod
+    # check a board after a given move was made
+    def checkMove(move, board):
+        connect, play = move
+        word, offset, direction = play
+        nextTile = (connect[0] - (offset * direction[0]), connect[1] - (offset * direction[1]))
+        for letter in word:
+            if board[nextTile] != letter:
+                return False
+            left, right, top, bottom = BananagramsUtil.getTileSpace(board, nextTile)
+            acrossLen = left + right + 1
+            downLen = top + bottom + 1
+            if acrossLen > 1:
+                branchTile = (nextTile[0] + left, nextTile[1])
+                acrossWord = ""
+                for i in range(acrossLen):
+                    acrossWord += board[branchTile]
+                    branchTile = (branchTile[0] - i, branchTile[1])
+                if not words.check(acrossWord.lower()):
+                    return False
+            if downLen > 1:
+                branchTile = (nextTile[0], nextTile[1] + top)
+                downWord = ""
+                for i in range(acrossLen):
+                    downWord += board[branchTile]
+                    branchTile = (branchTile[0], branchTile[1] - i)
+                if not words.check(downWord.lower()):
+                    return False
+            nextTile = (nextTile[0] + direction[0], nextTile[1] + direction[1])
+        return True
+
+    @staticmethod
     # get the next tiles in the search
     # params: board to search, current tile in search
     def getNextSearchTiles(board, current):
@@ -215,6 +246,8 @@ class BananagramsUtil:
     # get the plays available
     # params: board to play on, hand to play from
     def getAllPlays(board, hand):
+        print("board size:", len(board), "hand size:", BananagramsUtil.countTiles(hand), end=" --- ")
+        st = time.time()
         handString = BananagramsUtil.handToString(hand)
         allPlays = {}
         bridgePlays = BananagramsUtil.getBridgePlays(handString, board)
@@ -225,6 +258,7 @@ class BananagramsUtil:
                 allPlays[tile] = bridgePlays[tile]
         if not allPlays:
             allPlays[(0, 0)] = BananagramsUtil.getFirstPlays(handString)
+        print(time.time() - st, "Seconds")
         return allPlays
 
     @staticmethod
@@ -369,7 +403,7 @@ class BananagramsUtil:
         return cols, rows
 
     @staticmethod
-    # get the space above, below, left, and right of a tile
+    # get the space left, right, above,and below,  of a tile
     # params: board to search, tile to check
     def getTileSpace(board, tile):
         left, right, top, bottom = BananagramsUtil.getBoardArea(board)
