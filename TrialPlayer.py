@@ -24,7 +24,6 @@ class TrialPlayer(AIPlayer, ABC):
     # params: board and hand to make sample moves on
     def sampleMove(self, board, hand):
         sampleMoves = self.nextMoves(board, hand)
-
         for move in sampleMoves:
             if None in move:  # no plays
                 return float("-inf"), board, hand

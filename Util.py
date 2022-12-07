@@ -179,25 +179,24 @@ class BananagramsUtil:
     @staticmethod
     # run bfs to check that all tiles are connected
     def islandCheck(board):
-        if len(board) > 0:
-            allTiles = list(board)
-            frontier = list()
-            explored = set()
-            start = allTiles[0]
-            frontier.insert(0, start)
-            while len(frontier) > 0:
-                current = frontier.pop()
-                explored.add(current)
-                for successor in BananagramsUtil.getNextSearchTiles(board, current):
-                    if successor not in explored:
-                        if successor not in frontier:
-                            frontier.insert(0, successor)
-            island = set(allTiles) - explored
-            islandTiles = {}
-            for tile in island:
-                islandTiles[tile] = board[tile]
-            return islandTiles
-        return {}
+        if len(board) == 0:
+            return {}
+        allTiles = list(board)
+        frontier = list()
+        explored = set()
+        start = allTiles[0]
+        frontier.insert(0, start)
+        while len(frontier) > 0:
+            current = frontier.pop()
+            explored.add(current)
+            for successor in BananagramsUtil.getNextSearchTiles(board, current):
+                if successor not in explored and successor not in frontier:
+                    frontier.insert(0, successor)
+        island = set(allTiles) - explored
+        islandTiles = {}
+        for tile in island:
+            islandTiles[tile] = board[tile]
+        return islandTiles
 
     @staticmethod
     # check a board after a given move was made
@@ -208,27 +207,19 @@ class BananagramsUtil:
         for letter in word:
             if board[nextTile] != letter:
                 return False
-            left, right, top, bottom = BananagramsUtil.getTileSpace(board, nextTile)
-            acrossLen = left + right + 1
-            downLen = top + bottom + 1
-            if acrossLen > 1:
-                branchTile = (nextTile[0] + left, nextTile[1])
-                acrossWord = ""
-                for i in range(acrossLen):
-                    acrossWord += board[branchTile]
-                    branchTile = (branchTile[0] - i, branchTile[1])
-                if not words.check(acrossWord.lower()):
-                    return False
-            if downLen > 1:
-                branchTile = (nextTile[0], nextTile[1] + top)
-                downWord = ""
-                for i in range(acrossLen):
-                    downWord += board[branchTile]
-                    branchTile = (branchTile[0], branchTile[1] - i)
-                if not words.check(downWord.lower()):
-                    return False
+            branchWord = letter
+            branchTile = (nextTile[0] - direction[1], nextTile[1] - direction[0])  # direction is flipped
+            while branchTile in board:
+                branchWord = board[branchTile] + branchWord
+                branchTile = (branchTile[0] - direction[1], branchTile[1] - direction[0])
+            branchTile = (nextTile[0] + direction[1], nextTile[1] + direction[0])  # direction is flipped
+            while branchTile in board:
+                branchWord = branchWord + board[branchTile]
+                branchTile = (branchTile[0] + direction[1], branchTile[1] + direction[0])
+            if len(branchWord) > 1 and not words.check(branchWord.lower()):
+                return False
             nextTile = (nextTile[0] + direction[0], nextTile[1] + direction[1])
-        return True
+        return len(BananagramsUtil.islandCheck(board)) == 0
 
     @staticmethod
     # get the next tiles in the search
@@ -246,8 +237,6 @@ class BananagramsUtil:
     # get the plays available
     # params: board to play on, hand to play from
     def getAllPlays(board, hand):
-        print("board size:", len(board), "hand size:", BananagramsUtil.countTiles(hand), end=" --- ")
-        st = time.time()
         handString = BananagramsUtil.handToString(hand)
         allPlays = {}
         bridgePlays = BananagramsUtil.getBridgePlays(handString, board)
@@ -258,7 +247,6 @@ class BananagramsUtil:
                 allPlays[tile] = bridgePlays[tile]
         if not allPlays:
             allPlays[(0, 0)] = BananagramsUtil.getFirstPlays(handString)
-        print(time.time() - st, "Seconds")
         return allPlays
 
     @staticmethod
@@ -281,7 +269,7 @@ class BananagramsUtil:
         def getWords(pQueue):
             tileLetters = ""
             for item in pQueue.heap:  # add each tile's letter to string
-                tileLetters += board[item[2]]
+                tileLetters += board[item[2]]  # TODO: change to building list of anagram letters in order
             return list(words.anagram(handString + tileLetters))  # find anagrams
 
         # convert priority queue of letters to a list with blanks in gaps between tiles
@@ -314,9 +302,11 @@ class BananagramsUtil:
             lenW = len(word)
             lenQ = len(queueList)
             for startIndex in range(1 - lenW, lenQ):  # check all connected offsets for word in col/row
+                hand = list(handString)
                 fits = True
                 fromHand = False
-                hand = list(handString)
+                spaceBefore = startIndex <= 0
+                spaceAfter = startIndex + lenW >= lenQ
                 for wordIndex, letter in enumerate(word):  # check each letter in word for current offset
                     letter = letter.upper()
                     queueIndex = startIndex + wordIndex
@@ -338,7 +328,12 @@ class BananagramsUtil:
                     else:  # letter is not within board area, and not in hand then offset doesn't fit
                         fits = False
                         break
-                if fits and fromHand:  # if passed checks above the offset fits and should be added to the list
+                if not spaceBefore:
+                    spaceBefore = queueList[startIndex - 1][0] is None
+                if not spaceAfter:
+                    spaceAfter = queueList[startIndex + lenW][0] is None
+                # if passed checks above the offset fits and should be added to the list
+                if fits and fromHand and spaceBefore and spaceAfter:
                     startOffsets.append(-startIndex)
             return startOffsets
 
@@ -362,8 +357,11 @@ class BananagramsUtil:
                 for offset in startOffsets:  # go through all offsets for word
                     startTile = (col, firstTile[1] + offset)
                     play = (word.upper(), 0, (0, -1))
-                    test, _ = BananagramsUtil.makeMove((startTile, play), board)
-                    if not BananagramsUtil.check(test)[1]:  # check copy of board for valid
+                    move = (startTile, play)
+                    test, _ = BananagramsUtil.makeMove(move, board)
+                    # if not BananagramsUtil.check(test)[1]:
+                    if BananagramsUtil.checkMove(move, test):  # check copy of board for valid
+                        BananagramsUtil.checkMove(move, test)
                         if startTile not in allPlays:
                             allPlays[startTile] = []
                         allPlays[startTile].append((word.upper(), 0, (0, -1)))
@@ -376,8 +374,11 @@ class BananagramsUtil:
                 for offset in startOffsets:
                     startTile = (firstTile[0] + offset, row)
                     play = (word.upper(), 0, (-1, 0))
-                    test, _ = BananagramsUtil.makeMove((startTile, play), board)
-                    if not BananagramsUtil.check(test)[1]:
+                    move = (startTile, play)
+                    test, _ = BananagramsUtil.makeMove(move, board)
+                    # if not BananagramsUtil.check(test)[1]:
+                    if BananagramsUtil.checkMove(move, test):
+                        BananagramsUtil.checkMove(move, test)
                         if startTile not in allPlays:
                             allPlays[startTile] = []
                         allPlays[startTile].append(play)
@@ -401,42 +402,6 @@ class BananagramsUtil:
             rows[y].update(tile, -x)
         # keys are ints of the col/row, values are priority queues sorted from left->right/top->bottom
         return cols, rows
-
-    @staticmethod
-    # get the space left, right, above,and below,  of a tile
-    # params: board to search, tile to check
-    def getTileSpace(board, tile):
-        left, right, top, bottom = BananagramsUtil.getBoardArea(board)
-        x, y = tile
-        posX = x
-        negX = x
-        posY = y
-        negY = y
-        while posX < left:  # positive x direction (left)
-            if (posX + 1, y) in board:
-                break
-            posX += 1
-        while negX > right:  # negative x direction (right)
-            if (negX - 1, y) in board:
-                break
-            negX -= 1
-        while posY < top:  # positive y direction (up)
-            if (x, posY + 1) in board:
-                break
-            posY += 1
-        while negY > bottom:  # negative y direction (down)
-            if (x, negY - 1) in board:
-                break
-            negY -= 1
-        if posX == left:  # reached boundary, no limit on word length in this direction
-            posX = float('inf')
-        if negX == right:
-            negX = float('-inf')
-        if posY == top:
-            posY = float('inf')
-        if negY == bottom:
-            negY = float('-inf')
-        return posX - x, x - negX, posY - y, y - negY
 
     @staticmethod
     # get the boundaries of used the board (left, top, right, bottom)
@@ -505,3 +470,5 @@ class PriorityQueue:
             if v == item:
                 return p
         return None
+
+

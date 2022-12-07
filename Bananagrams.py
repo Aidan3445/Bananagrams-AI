@@ -22,7 +22,7 @@ class Bananagrams:
             raise Exception("1 - 4 players")
         # base game
         self.players = listOfPlayers  # list of players in the game
-        self.order = order = list(range(len(self.players)))  # the order of players to play and peel for randomization
+        self.order = list(range(len(self.players)))  # the order of players to play and peel for randomization
         self.tilePool = {}  # pool of tiles left
         self.handSize = handSize
         self.gameOver = False
@@ -94,6 +94,9 @@ class Bananagrams:
             # if no peels are called in the at most, the number of tiles in starting pool
             if self.noPeelCounter > 144 - len(self.players) * self.handSize:
                 self.stats["No Winner"] += 1
+                for p in self.players:
+                    print(util.boardToString(p.board))
+                    print("Valid: %s\nInvalid: %s" % util.check(p.board))
                 print("Stalemate, No Winner")
                 self.gameOver = True
         if self.runs == 0:
@@ -182,12 +185,10 @@ lookies = [LongestOneLook(), ScrabbleOneLook(), ShortestOneLook()]
 starries = [LongestAStar(), ScrabbleAStar()]
 trialies = [LongestOneLookTrial(2), LongestOneLookTrial(3),
             LongestOneLookTrial(4), LongestOneLookTrial(5)]
-smarties = [LongestOneLookSmarty(2, 5), LongestOneLookSmarty(2, 1),
-            LongestOneLookSmarty(5, 2), LongestOneLookSmarty(5, 1)]
+smarties = [LongestOneLookSmarty(2, 5), LongestAStarSmarty(2, 5),
+            ScrabbleOneLookSmarty(2, 5), ScrabbleAStarSmarty(2, 5)]
 mixies = [ScrabbleOneLook(), LongestAStar(),
           ScrabbleOneLookTrial(2), LongestOneLookSmarty(5, 2)]
 
-startTime = time.time()
-game = Bananagrams([LongestOneLook()], runCount=1)
+game = Bananagrams([LongestAStarSmarty(2, 5)], runCount=10)
 game.newGame()
-
