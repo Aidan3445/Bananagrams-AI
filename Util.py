@@ -199,6 +199,18 @@ class BananagramsUtil:
         return islandTiles
 
     @staticmethod
+    # get the next tiles in the search
+    # params: board to search, current tile in search
+    def getNextSearchTiles(board, current):
+        successors = []
+        possibleTiles = [(current[0] + 1, current[1]), (current[0] - 1, current[1]),
+                         (current[0], current[1] + 1), (current[0], current[1] - 1)]
+        for t in possibleTiles:
+            if t in board:
+                successors.append(t)
+        return successors
+
+    @staticmethod
     # check a board after a given move was made
     def checkMove(move, board):
         connect, play = move
@@ -220,18 +232,6 @@ class BananagramsUtil:
                 return False
             nextTile = (nextTile[0] + direction[0], nextTile[1] + direction[1])
         return len(BananagramsUtil.islandCheck(board)) == 0
-
-    @staticmethod
-    # get the next tiles in the search
-    # params: board to search, current tile in search
-    def getNextSearchTiles(board, current):
-        successors = []
-        possibleTiles = [(current[0] + 1, current[1]), (current[0] - 1, current[1]),
-                         (current[0], current[1] + 1), (current[0], current[1] - 1)]
-        for t in possibleTiles:
-            if t in board:
-                successors.append(t)
-        return successors
 
     @staticmethod
     # get the plays available
