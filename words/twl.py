@@ -122,6 +122,7 @@ import itertools
 import struct
 import zlib
 
+
 def check(word):
     '''
     Returns True if `word` exists in the TWL06 dictionary.
