@@ -4,6 +4,9 @@ Using https://github.com/fogleman/TWL06 for word dictionary.
 
 We applied search, game-playing, and probabilistic algorithms to develop AI Bananagrams players. 
 
+The main.py script can be run with a series of command-line arguments to control the size of the window, number of run simulations, and which players are in the simulation. Running the script without any arguemnts will enter the user single player mode where you can test your own Bananagrams skills.
+You can also edit the main.py script to allow for even more customization of the AI players.
+
 # Banan-AI-grams
 
 ### Driving Questions
