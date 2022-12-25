@@ -39,18 +39,30 @@ At their turn, a Player can take the action to “play” a word onto their boar
 To “get successors,” each Player uses an algorithm that analyzes their current board of played words and their hand of tiles to find all possible moves they can take. Once they gather all possible moves, each Player will evaluate the moves using their distinct algorithm and a specified heuristic to decide the best move to take. At each turn, the Player’s State (input) is evaluated to return the move, a word played on their board, they should take (output). 
 
 ### Algorithms
-TODO: write the breakdown of main algorithms in the game logic
 
+#### Checking Valid Boards/Moves
+The first board check uses BFS to make sure there are no "islands" and that all tiles are connected to eachother. If any islands are found the check algorithm is recursively called on the disconnected tiles and all words found are automatically added to an invalid word list.
+
+Next an algorithm loops through each row/column to make a list of the tiles that have blank spaces to the left/above, these tiles are the first tiles in a word. Then words are built by moving down and/or across from each start tile until a blank tile is reached, the word validity is checked using the TWL library and adde to either an invalid or valid word list.
+
+To check single moves, a more localized version of the same algortithm just checks the words that are formed immediately branching off of the move.
+
+#### Move Generation
+For the first move, generation simply uses the TWL library to find all anagrams from the player's hand. Once there are tiles on the board the "Bridge Moves" algorithm loops through each row/column and once again generates a list of all anagrams now using the player's hand as well the tiles in that row/column. Each anagram is 'slid' along the row/column and checked to see if it fits with the tiles on the board and uses at least one tile from the hand. If it fits in the board along that row/column, then the 'Play Check' Once all checks are passed the move is added to a list of valid plays, this list is returned to an AI player which uses its own strategy to choose which move is best.
 
 ### Playing Agents
 To solve Bananagrams, we used four different playing agents, Players, the implement different algorithms to choose the next move they should take at each turn. 
 
+#### Onelook Player
 The first and most simple agent is the OneLook Player. OneLook searches through all possible moves at the current state and evaluates the playable words based on a specified heuristic. OneLook’s three possible heuristics evaluate to find, respectively, the longest possible word (LongestWord), the shortest possible word (ShortestWord), and the word with the highest Scrabble score, which values rare letters (Scrabble). OneLook is the most efficient algorithm. 
 
+#### A* Player
 The second agent is the A* Player, which uses the A* search algorithm to find the best sequence of moves from the current state. The algorithm evaluates the resulting hand after playing a word based on a specified heuristic. Similar to OneLook, A*’s two heuristics evaluate for the longest word and the highest Scrabble score. This Player is slower than OneLook but is more effective. 
 
+#### Trial Player
 Third, the Trial Player uses either A* or OneLook in an attempt to predict future events and makes a move accordingly. Trial samples each action– either “peel,” “wait,” or “dump”– a given number of times to determine the most optimal move according to OneLook/A*’s heuristic. The Trial algorithm evaluates the board at each sample using a sample heuristic. The sample heuristics evaluate based on the average word length and the average word Scrabble score. The Trial Player is less efficient but more effective. 
-	
+
+#### Smart Player
 The fourth and final agent is the Smart Player, which combines either the A* or OneLook Player with the Trial Player. Smart Players use A*/OneLook at the beginning of the game to quickly make moves and then switch to Trial when few tiles remain in the pool. Smart Players take advantage of A*/OneLook’s efficiency in combination with the improved performance of the Trial Player at the end when there is a higher risk of getting stuck in a stalemate and a single move may directly result in a win. 
 
 ### Analysis 
