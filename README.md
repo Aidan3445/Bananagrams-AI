@@ -1,4 +1,4 @@
-# Banan-AI-grams
+# <img width="626" alt="title" src="https://user-images.githubusercontent.com/102766475/209456396-e9169f5f-682f-4452-a594-d276f08c233a.png">
 
 Final Project for CS4100 at Northeastern University
 
