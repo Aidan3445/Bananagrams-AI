@@ -111,10 +111,10 @@ class Player(ABC):
         fontSize = int(self.screen / 20)
         font = pg.font.SysFont(None, fontSize)
         text = font.render(l1, True, 'black')
-        align = text.get_rect(center=(self.screen / 2, self.screen - fontSize * 0.5))
+        align = text.get_rect(center=(self.screen / 2, self.screen - fontSize * 1.5))
         self.boardScreen.blit(text, align)  # draw line 1
         text = font.render(l2, True, 'black')
-        align = text.get_rect(center=(self.screen / 2, self.screen - fontSize * 1.5))
+        align = text.get_rect(center=(self.screen / 2, self.screen - fontSize * 0.5))
         self.boardScreen.blit(text, align)  # draw line 2
 
     # scale the view to show more/less of the board params: +/- change in scale
