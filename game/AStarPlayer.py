@@ -38,7 +38,7 @@ class AStar(AIPlayer, ABC):
             currentHand = current.state.hand
             if self.terminateSearch(current.state) and current.moves:
                 return current.moves
-            allPlays = util.getAllPlays(currentBoard, currentHand)
+            allPlays = util.getAllMoves(currentBoard, currentHand)
             for tile in allPlays:
                 for play in allPlays[tile]:
                     move = (tile, play)
@@ -54,7 +54,7 @@ class AStar(AIPlayer, ABC):
     def NoAStar(self, board, hand):
         best = None
         lowest = float("inf")
-        allPlays = util.getAllPlays(board, hand)
+        allPlays = util.getAllMoves(board, hand)
         for tile in allPlays:
             for play in allPlays[tile]:
                 move = (tile, play)

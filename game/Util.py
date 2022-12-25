@@ -232,24 +232,24 @@ class BananagramsUtil:
         return len(BananagramsUtil.islandCheck(board)) == 0
 
     @staticmethod
-    # get the plays available
+    # get the moves available
     # params: board to play on, hand to play from
-    def getAllPlays(board, hand):
+    def getAllMoves(board, hand):
         handString = BananagramsUtil.handToString(hand)
-        allPlays = {}
-        bridgePlays = BananagramsUtil.getBridgePlays(handString, board)
-        for tile in bridgePlays:
-            if tile in allPlays:
-                allPlays[tile] += bridgePlays[tile]
+        allMoves = {}
+        bridgeMoves = BananagramsUtil.getBridgeMoves(handString, board)
+        for tile in bridgeMoves:
+            if tile in allMoves:
+                allMoves[tile] += bridgeMoves[tile]
             else:
-                allPlays[tile] = bridgePlays[tile]
-        if not allPlays:
-            allPlays[(0, 0)] = BananagramsUtil.getFirstPlays(handString)
-        return allPlays
+                allMoves[tile] = bridgeMoves[tile]
+        if not allMoves:
+            allMoves[(0, 0)] = BananagramsUtil.getFirstMoves(handString)
+        return allMoves
 
     @staticmethod
     # get plays that bridge between two or more tiles already on the board
-    def getBridgePlays(handString, board):
+    def getBridgeMoves(handString, board):
         # helper methods
         # get all words in a column/row
         # params: priority queue with letters in a col/row
@@ -334,7 +334,7 @@ class BananagramsUtil:
             colWords[col] = getWords(cols[col])
         for row in rows:
             rowWords[row] = getWords(rows[row])
-        allPlays = {}  # holds all the plays available with the current hand
+        allMoves = {}  # holds all the plays available with the current hand
         for col in colWords:  # check for words that fit in board vertically
             wordList = colWords[col]
             colList = queueToList(cols[col])
@@ -348,9 +348,9 @@ class BananagramsUtil:
                     test, _ = BananagramsUtil.makeMove(move, board)
                     if BananagramsUtil.checkMove(move, test):  # check copy of board for valid
                         BananagramsUtil.checkMove(move, test)
-                        if startTile not in allPlays:
-                            allPlays[startTile] = []
-                        allPlays[startTile].append((word.upper(), 0, (0, -1)))
+                        if startTile not in allMoves:
+                            allMoves[startTile] = []
+                        allMoves[startTile].append((word.upper(), 0, (0, -1)))
         for row in rowWords:  # same as cols above
             wordList = rowWords[row]
             rowList = queueToList(rows[row])
@@ -364,10 +364,10 @@ class BananagramsUtil:
                     test, _ = BananagramsUtil.makeMove(move, board)
                     if BananagramsUtil.checkMove(move, test):
                         BananagramsUtil.checkMove(move, test)
-                        if startTile not in allPlays:
-                            allPlays[startTile] = []
-                        allPlays[startTile].append(play)
-        return allPlays
+                        if startTile not in allMoves:
+                            allMoves[startTile] = []
+                        allMoves[startTile].append(play)
+        return allMoves
 
     @staticmethod
     # create two dictionaries with all tiles in each occupied column and row of the board
@@ -391,13 +391,13 @@ class BananagramsUtil:
     @staticmethod
     # get words to play from hand to blank board
     # params: letters in hand
-    def getFirstPlays(letters):
+    def getFirstMoves(letters):
         allWords = list(words.anagram(letters))  # empty board means all anagrams are valid
-        playableWords = []
+        moves = []
         for word in allWords:
             word = word.upper()
-            playableWords.append((word, 0, (-1, 0)))  # all first plays go across
-        return playableWords
+            moves.append((word, 0, (-1, 0)))  # all first plays go across
+        return moves
 
     @staticmethod
     # get the boundaries of used the board (left, top, right, bottom)

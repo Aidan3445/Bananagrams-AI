@@ -14,7 +14,7 @@ class OneLook(AIPlayer, ABC):
     # nextMove algorithm to choose move
     # params: board to play on, hand to play from
     def nextMoves(self, board, hand):
-        allPlays = util.getAllPlays(board, hand)
+        allPlays = util.getAllMoves(board, hand)
         bestH = float("-inf")
         bestPlay = None
         bestTile = None
