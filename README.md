@@ -1,82 +1,87 @@
-# <img width="626" alt="title" src="https://user-images.githubusercontent.com/102766475/209456396-e9169f5f-682f-4452-a594-d276f08c233a.png">
+# AI Bananagrams Project
 
-Final Project for CS4100 at Northeastern University
+![Title](https://user-images.githubusercontent.com/102766475/209456396-e9169f5f-682f-4452-a594-d276f08c233a.png)
 
-Using [TWL06](https://github.com/fogleman/TWL06) for the word dictionary.
+This is the final project for CS4100 at Northeastern University, where we applied search, game-playing, and probabilistic algorithms to develop AI Bananagrams players.
 
-We applied search, game-playing, and probabilistic algorithms to develop AI Bananagrams players. 
+## Project Overview
 
-The main.py script can be run with a series of command-line arguments to control the size of the window, number of run simulations, and which players are in the simulation. Running the script without any arguments will enter the user single-player mode where you can test your own Bananagrams skills.
-The main.py script can be edited and run from and IDE to allow for even more customization of the AI players.
+The goal of this project was to use artificial intelligence strategies to tackle the game of Bananagrams, a fast-paced word game that challenges players to create valid words from a set of letter tiles. We explored various algorithms and playing strategies to create AI players capable of competing in Bananagrams.
+
+## How to Run
+
+The main.py script is the entry point for the project. You can run it with a series of command-line arguments to control the game's parameters, including the size of the window, the number of run simulations, and which AI players are in the simulation. If you run the script without any arguments, it will enter single-player mode, allowing you to test your own Bananagrams skills.
+
+For further customization and experimentation, you can edit and run the main.py script from an IDE.
 
 ## Driving Questions
-For our project, we used AI strategies to solve the game of Bananagrams. Our driving questions are as follows: 
-* How can we use AI to solve Bananagrams?
-* What is the most effective strategy to solve the problem? 
-* How can we, as humans, use AI to become better Bananagrams players? 
 
-## What is Bananagrams? 
+Our project was guided by several driving questions:
 
-The game of Bananagrams can be played with between one and four players. The game is set up with a communal pool of face-down letter tiles from which each player draws a certain number to form their hand. When the game begins, all players, at the same time, flip their tiles to reveal the letters and arrange them into a grid of valid, connecting words. During play, if a player wants to get rid of a tile, perhaps a problematic letter like 'Q' or 'Z,' they may 'dump,' and exchange that one tile with two from the center pool. When any one player successfully places all tiles onto their board, they call “Peel!” and all players must draw a tile from the pool. Once the pool is depleted and there can be no more even 'peels,' the first player to play all of their tiles on their board is the winner. 
+1. How can we use AI to solve Bananagrams?
+2. What is the most effective strategy to solve the problem?
+3. How can we, as humans, use AI to become better Bananagrams players?
 
-Bananagrams does not reward complex words like Scrabble, and all that matters is playing all of one's tiles in some valid word. It is a game of speed. 
+## What is Bananagrams?
 
-## Tools 
-We use Python and the Pygame library to visualize the board in our implementation. We borrowed the priority queue class from the Berkeley PacMan Programming Assignment. To check for valid words and to find anagrams of a set of letters, we utilize the [TWL06](https://github.com/fogleman/TWL06) word search library, which uses a directed acyclic word graph (DAWG) to efficiently look up and check words. 
+Bananagrams is a word game that can be played with one to four players. Players draw letter tiles to form their hand and create a grid of connecting words with these tiles. The game is fast-paced, and the objective is to be the first to play all tiles on the board. There are strategies involved in using limited vowels and challenging letters like 'Q' or 'Z.' Speed and creativity are essential in Bananagrams.
 
-## Relaxations 
-Between the actual Bananagrams game and our model, we made two relaxations. 
-First, in the actual game, all players play synchronously. However, in our model, they take turns playing one word at a time. To clarify, if each player has one turn in a 'round,' then in each 'round,' the order they take their turns will be random, so one player does not have the advantage of always playing first. 
+## Tools Used
 
-Second, in the actual game, players can reconstruct sections or their entire board at any time to better suit the words they aim to play. In our model, we do not allow players to do this; once a word is played on the board, it may not be changed. Due to this relaxation, at the end of a game, a stalemate may occur.
+We used Python and the Pygame library for visualizing the game board. For word checking and finding anagrams, we utilized the [TWL06](https://github.com/fogleman/TWL06) word search library, which employs a directed acyclic word graph (DAWG) to efficiently validate words.
 
-## Modeling 
-We faced some limitations when modeling the game and defined the model as follows. 
-The GameState is the communal tile pool from which players 'peel.' Each AI playing agent, or Player’s, State is their board of played tiles and their hand of remaining tiles. 
+## Relaxations
 
-At their turn, a Player can take the action to 'play' a word onto their board, 'peel' a letter when some player has used all of its tiles, and/or 'dump' a tile. The Trial and Smart Players, which will be defined below, also can 'wait' during their turn and not play any word. 
+To make the problem tractable, we introduced two relaxations compared to the actual Bananagrams game:
 
-To 'get successors,' each Player uses an algorithm that analyzes their current board of played words and their hand of tiles to find all possible moves they can take. Once they gather all possible moves, each Player will evaluate the moves using their distinct algorithm and a specified heuristic to decide the best move to take. At each turn, the Player’s State (input) is evaluated to return the move, a word played on their board, they should take (output). 
+1. Players take turns playing one word at a time instead of playing synchronously.
+2. Players cannot reconstruct sections or their entire board once a word is played.
+
+These relaxations might result in stalemates in single-player games.
+
+## Modeling
+
+The GameState represents the communal tile pool from which players 'peel.' Each AI playing agent, or Player, has a State representing their board of played tiles and their hand of remaining tiles.
+
+Players can take actions like 'play' a word onto their board, 'peel' a letter when some player has used all its tiles, and/or 'dump' a tile. To find successors, each Player uses an algorithm that analyzes their current board and hand to find all possible moves. They evaluate these moves using their specific algorithm and a heuristic to decide the best move to take.
 
 ## Algorithms
 
 ### Checking Valid Boards/Moves
-The first board check uses BFS to make sure there are no 'islands' and that all tiles are connected to each other. If any islands are found the check algorithm is recursively called on the disconnected tiles and all words found are automatically added to an invalid word list.
 
-Next, an algorithm loops through each row/column to make a list of the tiles that have blank spaces to the left/above, these tiles are the first tiles in a word. Then words are built by moving down and/or across from each start tile until a blank tile is reached, the word validity is checked using the [TWL06](https://github.com/fogleman/TWL06) library and added to either an invalid or valid word list.
+We used Breadth-First Search (BFS) to check for valid boards, ensuring no 'islands' and that all tiles are connected. We also looped through each row/column to identify the start tiles for words and then built words by moving down and/or across from each start tile. The [TWL06](https://github.com/fogleman/TWL06) library was used to validate words.
 
-To check single moves, a more localized version of the same algorithm just checks the words that are formed immediately after branching off of the move.
+For single moves, we checked the words formed immediately after branching off the move.
 
 ### Move Generation
-For the first move, generation simply uses the [TWL06](https://github.com/fogleman/TWL06) library to find all anagrams from the player's hand. Once there are tiles on the board the 'Bridge Moves' algorithm loops through each row/column and once again generates a list of all anagrams now using the player's hand as well the tiles in that row/column. 
 
-![](https://user-images.githubusercontent.com/102766475/209456292-45ef7cee-cd5e-497f-b446-4a4bf44f60b6.gif)
+For the first move, we used the [TWL06](https://github.com/fogleman/TWL06) library to find all anagrams from the player's hand. As tiles accumulated on the board, we used the 'Bridge Moves' algorithm to generate a list of all anagrams, taking the player's hand and the tiles in that row/column into account.
 
-Each anagram is 'slid' along the row/column and checked to see if it fits with the tiles on the board and uses at least one tile from the hand. If it fits in the board along that row/column, then the 'move check' algorithm makes sure the move is valid within the rest of the board. Once all checks are passed the move is added to a list of valid plays, this list is returned to an AI player which uses its own strategy to choose which move is best.
+### Playing Agents
 
-## Playing Agents
-To solve Bananagrams, we used four different playing agents, Players, the implement different algorithms to choose the next move they should take at each turn. 
+We created four playing agents with different algorithms:
 
-### OneLook Player
-The first and most simple agent is the OneLook Player. OneLook searches through all possible moves at the current state and evaluates the playable words based on a specified heuristic. OneLook’s three possible heuristics evaluate to find, respectively, the longest possible word (LongestWord), the shortest possible word (ShortestWord), and the word with the highest Scrabble score, which values rare letters (Scrabble). OneLook is the most efficient algorithm. 
+1. **OneLook Player**: This simple agent searches through all possible moves and evaluates playable words based on heuristics, such as longest word, shortest word, and highest Scrabble score.
 
-### A* Player
-The second agent is the A* Player, which uses the A* search algorithm to find the best sequence of moves from the current state. The algorithm evaluates the resulting hand after playing a word based on a specified heuristic. Similar to OneLook, A*’s two heuristics evaluate for the longest word and the highest Scrabble score. This Player is slower than OneLook but is more effective. 
+2. **A* Player**: Using the A* search algorithm, this agent finds the best sequence of moves based on heuristics, including longest word and highest Scrabble score.
 
-### Trial Player
-Third, the Trial Player uses either A* or OneLook in an attempt to predict future events and makes a move accordingly. Trial samples each action– either 'peel,' 'wait,' or 'dump'– a given number of times to determine the most optimal move according to OneLook/A*’s heuristic. The Trial algorithm evaluates the board at each sample using a sample heuristic. The sample heuristics evaluate based on the average word length and the average word Scrabble score. The Trial Player is less efficient but more effective. 
+3. **Trial Player**: The Trial Player uses either A* or OneLook to predict future events by sampling each action (peel, wait, or dump) multiple times and choosing the optimal move based on heuristics.
 
-### Smart Player
-The fourth and final agent is the Smart Player, which combines either the A* or OneLook Player with the Trial Player. Smart Players use A*/OneLook at the beginning of the game to quickly make moves and then switch to Trial when few tiles remain in the pool. Smart Players take advantage of A*/OneLook’s efficiency in combination with the improved performance of the Trial Player at the end when there is a higher risk of getting stuck in a stalemate and a single move may directly result in a win. 
+4. **Smart Player**: The Smart Player combines A* or OneLook with Trial, switching between them depending on the game state to balance speed and accuracy.
 
-## Analysis 
-First, since we do not allow players to redraw their boards, A* and OneLook Players often end in a stalemate in single-player games. However, Smart and Trial Players have much higher single-player success rates because, while they do take longer to choose moves, they think ahead to pick moves that reduce the likelihood of getting stuck in a stalemate at the game’s end. 
+## Analysis
 
-Additionally, Smart Players, which combine OneLook/A* with Trial, have the highest overall win rates because they have both speed and accuracy. This result aligns with our hypothesis and driving motivation for writing the Smart Player: a winning strategy must combine the positive attributes of the other three algorithms and use the pairing to reduce individual weaknesses. 
+- A* and OneLook Players often end in stalemates in single-player games due to the inability to redraw the board.
+- Smart and Trial Players have higher single-player success rates as they think ahead to avoid stalemates.
+- Smart Players, which combine A* or OneLook with Trial, have the highest overall win rates, showcasing the benefit of combining algorithms.
+- Longest word and Scrabble score alone do not guarantee a win, suggesting that a more complex strategy is needed in Bananagrams.
 
-In terms of the two common heuristics, LongestWord and Scrabble, there is no clear winning strategy. So, the AI agents do not reveal how a human could adopt its methods to improve their play in real life; playing simply based on word length or Scrabble score does not guarantee a win. 
+## Conclusion and Future Work
 
-## Conclusion
-Moving forward, we consider changing our model to remove the need for the current relaxations. If we enable the Players to compete synchronously, instead of taking turns, then the efficiency of the algorithms would become much more important and would likely lead to more clear results. Further, we would like to improve the efficiency of our existing algorithms, particularly the method that searches the board for all possible moves. Finally, again removing a relaxation, we would like to add the ability for players to redraw portions of their boards or their entire board to eliminate the chance of getting stuck and ending in a stalemate. This addition of redrawing the board would likely change Player performance, efficiency, and success rates. 
+We successfully used AI to solve Bananagrams and identified effective strategies. Future work could involve:
 
-We have successfully answered our driving question of using AI to solve Bananagrams and which strategies are most effective. However, we were unable to use our AI to inform us how humans could improve their own Bananagrams play. 
+- Removing relaxations to enable synchronous play.
+- Improving the efficiency of existing algorithms.
+- Allowing players to redraw portions or their entire board to eliminate stalemate possibilities.
+
+We have successfully answered our driving question of using AI to solve Bananagrams and which strategies are most effective. However, we were unable to use our AI to inform us how humans could improve their own Bananagrams play.
